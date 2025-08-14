@@ -5,39 +5,62 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Multi-Platform Analysis Dashboard</title>
     
-    <!-- Fonts and Chart.js -->
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 
-    <!-- Link to your main stylesheet -->
+    <!-- Stylesheet -->
     <link rel="stylesheet" href="style.css">
+
+    <style>
+        /* Additional styles for the iframe to fill the main content area */
+        #main-content {
+            padding: 0;
+            overflow: hidden; /* Hide scrollbars on the main container */
+        }
+        #content-frame {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+    </style>
 </head>
 <body>
     <aside id="sidebar">
         <h1>Dashboard</h1>
         <nav>
             <ul>
-                <!-- The data-page attribute is now used to identify which tool to load -->
-                <li><a href="#" class="tab-link active" data-page="sitemap">Sitemap Web Analysis</a></li>
-                <li><a href="#" class="tab-link" data-page="youtube">YouTube</a></li>
-                <li><a href="#" class="tab-link" data-page="semrush">Semrush</a></li>
-                <!-- Add other links here if needed -->
+                <!-- Links now use standard href and a target -->
+                <li><a href="sitemap.html" class="tab-link active" target="content-frame">Sitemap Web Analysis</a></li>
+                <li><a href="youtube.html" class="tab-link" target="content-frame">YouTube</a></li>
+                <li><a href="semrush.html" class="tab-link" target="content-frame">Semrush</a></li>
+                <!-- Add other direct links here -->
             </ul>
         </nav>
     </aside>
 
-    <!-- This is where the content of your other HTML files will be loaded -->
+    <!-- The main content area now holds an iframe -->
     <main id="main-content">
-        <!-- Initial content can be empty or a welcome message -->
+        <iframe name="content-frame" id="content-frame" src="sitemap.html"></iframe>
     </main>
 
     <div id="credit-footer">
         By Nexid
     </div>
 
-    <!-- Link to the single, consolidated JavaScript file -->
-    <script src="script.js"></script>
+    <script>
+        // This simple script handles the "active" class on the sidebar links
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabLinks = document.querySelectorAll('.tab-link');
+            
+            tabLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    tabLinks.forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                });
+            });
+        });
+    </script>
 </body>
 </html>
