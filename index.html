@@ -13,6 +13,17 @@
     <!-- Stylesheet -->
     <link rel="stylesheet" href="style.css">
 
+    <!-- Google Analytics -->
+    <!-- IMPORTANT: Replace G-5XCH2XQTFB with your actual Measurement ID -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-5XCH2XQTFB"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+
+      gtag('config', 'G-5XCH2XQTFB'); 
+    </script>
+
     <style>
         /* This style block now includes the NEXID title animation */
         #main-content {
@@ -94,7 +105,6 @@
             const tabLinks = document.querySelectorAll('.tab-link');
             const mainContent = document.getElementById('main-content');
             const dashboardTitle = document.getElementById('dashboard-title');
-            const nexidTitle = document.querySelector('.nexid-title');
             
             const initialContent = mainContent.innerHTML;
 
@@ -105,6 +115,12 @@
                     link.classList.add('active');
                     mainContent.style.padding = '0';
                     mainContent.innerHTML = `<iframe id="content-frame" src="${link.href}"></iframe>`;
+
+                    // --- ADDED THIS LINE FOR ANALYTICS ---
+                    // This sends a page_view event to Google Analytics with the path of the tool
+                    gtag('event', 'page_view', {
+                        page_path: link.getAttribute('href')
+                    });
                 });
             });
 
@@ -113,11 +129,15 @@
                 mainContent.innerHTML = initialContent;
                 mainContent.style.padding = '2rem';
                 tabLinks.forEach(l => l.classList.remove('active'));
-                // Re-initialize the mouse move listener for the new title
                 initNexidInteraction();
+
+                // --- ADDED THIS LINE FOR ANALYTICS ---
+                // This sends a page_view event when returning to the home screen
+                gtag('event', 'page_view', {
+                    page_path: '/home'
+                });
             });
 
-            // --- UPDATED CURSOR INTERACTION LOGIC ---
             function initNexidInteraction() {
                 const titleEl = document.querySelector('.nexid-title');
                 if (!titleEl) return;
@@ -125,25 +145,21 @@
                 mainContent.addEventListener('mousemove', (e) => {
                     const { clientX, clientY } = e;
                     const { offsetWidth, offsetHeight } = mainContent;
-
                     const centerX = offsetWidth / 2;
                     const centerY = offsetHeight / 2;
-
-                    const moveX = (clientX - centerX) / centerX; // -1 to 1
-                    const moveY = (clientY - centerY) / centerY; // -1 to 1
+                    const moveX = (clientX - centerX) / centerX;
+                    const moveY = (clientY - centerY) / centerY;
                     
-                    // --- LOGIC CHANGES ARE HERE ---
                     let rotateX = 0;
                     let glowY = 0;
 
-                    // Only react if the cursor is in the bottom half of the screen
                     if (moveY > 0) {
-                        rotateX = moveY * -8; // Reduced max rotation to 8 degrees
-                        glowY = moveY * 15;   // Reduced max glow offset
+                        rotateX = moveY * -8;
+                        glowY = moveY * 15;
                     }
                     
-                    const rotateY = moveX * 8;  // Reduced max rotation to 8 degrees
-                    const glowX = moveX * 15; // Reduced max glow offset
+                    const rotateY = moveX * 8;
+                    const glowX = moveX * 15;
 
                     titleEl.style.setProperty('--rotate-x', `${rotateX}deg`);
                     titleEl.style.setProperty('--rotate-y', `${rotateY}deg`);
