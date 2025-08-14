@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparative YouTube Analysis</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- This style block contains all the necessary CSS for the page -->
+    <style>
+        :root {
+            --bg-color: #111827;
+            --card-color: #1f2937;
+            --border-color: #374151;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --accent-1: #ff0000; /* YouTube Red */
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            padding: 2rem;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .card {
+            background-color: var(--card-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+        .form-card { text-align: center; border: none; background-color: transparent; padding-top: 0; }
+        .form-card h1 { font-size: 2.5rem; font-weight: 700; letter-spacing: -1px; }
+        .form-card p { margin-top: 0.5rem; color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 1.5rem; }
+        
+        .url-input-group { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+        .url-input { flex-grow: 1; padding: 14px 18px; font-size: 1rem; background-color: var(--card-color); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 0.5rem; transition: all 0.2s; }
+        .url-input:focus { outline: none; border-color: var(--accent-1); box-shadow: 0 0 0 4px rgba(255, 0, 0, 0.2); }
+        .add-url-btn { flex-shrink: 0; background-color: var(--border-color); color: var(--text-primary); font-weight: 600; padding: 0 1.5rem; border: none; border-radius: 0.5rem; cursor: pointer; transition: background-color 0.2s; }
+        .add-url-btn:hover { background-color: #4b5563; }
+        .url-tags-container { display: flex; flex-wrap: wrap; gap: 0.5rem; min-height: 2.5rem; justify-content: center; margin-bottom: 1.5rem; }
+        .url-tag { display: flex; align-items: center; background-color: var(--bg-color); border: 1px solid var(--border-color); padding: 0.5rem 0.75rem; border-radius: 2rem; font-size: 0.9rem; animation: fadeInAnimation 0.3s; }
+        .url-tag span { margin-right: 0.5rem; }
+        .url-tag .remove-tag { margin-left: 0.5rem; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1rem; line-height: 1; }
+        .url-tag .remove-tag:hover { color: var(--text-primary); }
+        .analyze-btn { width: 100%; background-image: linear-gradient(to right, var(--accent-1), #ff4d4d); color: white; font-size: 1rem; font-weight: 600; padding: 14px 20px; border: none; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; }
+        .analyze-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(255, 0, 0, 0.2); }
+        
+        .fade-in { animation: fadeInAnimation 0.7s ease-in-out forwards; }
+        @keyframes fadeInAnimation { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .scorecard-section { display: none; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .source-scorecard-group { border-left: 4px solid; padding-left: 1.5rem; }
+        .source-scorecard-group h2 { font-size: 1.25rem; margin-bottom: 1rem; font-weight: 600; }
+        .source-scorecard-group h3 { font-size: 1rem; font-weight: 600; color: var(--text-secondary); margin-top: 1.5rem; margin-bottom: 1rem; }
+        .scorecard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; }
+        .scorecard { background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 0.5rem; padding: 1rem; text-align: center; }
+        .scorecard .value { font-size: 2rem; font-weight: 700; }
+        .scorecard .label { font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.25rem; }
+
+        .dashboard-grid { display: none; grid-template-columns: repeat(2, 1fr); gap: 2rem; }
+        .viz-card { grid-column: span 1; }
+        .viz-card.full-width { grid-column: span 2; }
+        .viz-card h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; }
+        .chart-container { position: relative; height: 350px; width: 100%; }
+        
+        .filters-container { display: flex; flex-wrap: nowrap; gap: 0.5rem; margin-bottom: 1.5rem; overflow-x: auto; padding-bottom: 10px; }
+        .filter-btn { background-color: var(--border-color); color: var(--text-secondary); border: none; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+        .filter-btn.active { color: white; font-weight: 600; transform: scale(1.05); }
+
+        .table-wrapper { max-height: 400px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        thead th { background-color: #374151; position: sticky; top: 0; font-weight: 600; }
+        tbody tr { transition: background-color 0.2s; }
+        tbody tr:hover { background-color: #374151; }
+        td a { color: var(--text-primary); text-decoration: none; display: block; }
+        td a:hover { text-decoration: underline; color: var(--accent-1); }
+
+        .loader { display: none; margin: 3rem auto 0; width: 48px; height: 48px; border: 5px solid var(--border-color); border-bottom-color: var(--accent-1); border-radius: 50%; animation: rotation 1s linear infinite; }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .error-message { text-align: center; padding: 1rem; background-color: #991b1b; color: #fecaca; border: 1px solid #ef4444; border-radius: 0.5rem; font-weight: 500; margin-top: 2rem; }
+        
+        @media (max-width: 992px) { 
+            .dashboard-grid { grid-template-columns: 1fr; }
+            .viz-card.full-width { grid-column: span 1; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <section class="card form-card">
+            <h1>Comparative YouTube Analysis</h1>
+            <p>Enter YouTube channel URLs for a 24-hour competitive overview.</p>
+            <form id="youtubeForm">
+                <div class="url-input-group">
+                    <input type="text" id="youtubeUrlInput" class="url-input" placeholder="e.g., youtube.com/@MrBeast">
+                    <button type="button" id="addYoutubeUrlBtn" class="add-url-btn">Add</button>
+                </div>
+                <div id="youtube-url-tags-container" class="url-tags-container"></div>
+                <button type="submit" id="analyzeYoutubeBtn" class="analyze-btn">Analyze Channels</button>
+            </form>
+        </section>
+
+        <div id="youtube-loader" class="loader"></div>
+        <div id="youtube-results-container"></div>
+
+        <section id="youtube-scorecard-section" class="scorecard-section"></section>
+
+        <div id="youtube-dashboard-grid" class="dashboard-grid">
+            <div class="card viz-card full-width">
+                <h2>Top Performing Videos (24h)</h2>
+                <div id="youtube-top-videos-filters" class="filters-container"></div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Channel</th>
+                                <th>Video Title</th>
+                                <th>Views</th>
+                                <th>Comments</th>
+                                <th>Published (IST)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="youtubeTopVideosBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- NEW PIE CHARTS -->
+            <div class="card viz-card">
+                <h2>Upload Distribution (24h)</h2>
+                <div class="chart-container">
+                    <canvas id="youtubeUploadsPieChart"></canvas>
+                </div>
+            </div>
+            <div class="card viz-card">
+                <h2>View Distribution (24h)</h2>
+                <div class="chart-container">
+                    <canvas id="youtubeViewsPieChart"></canvas>
+                </div>
+            </div>
+
+            <div class="card viz-card">
+                <h2>Trending Topics from Titles (24h)</h2>
+                <div id="youtube-topics-filters" class="filters-container"></div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Keyword</th>
+                                <th>Frequency</th>
+                            </tr>
+                        </thead>
+                        <tbody id="youtubeKeywordsBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="card viz-card">
+                <h2>Hourly Upload Frequency (24h)</h2>
+                <div id="youtube-upload-freq-filters" class="filters-container"></div>
+                <div class="chart-container">
+                    <canvas id="youtubeFrequencyChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="card viz-card full-width">
+                <h2>Hourly Views (24h)</h2>
+                <div id="youtube-hourly-views-filters" class="filters-container"></div>
+                <div class="chart-container">
+                    <canvas id="youtubeViewsChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    // --- YOUTUBE ANALYSIS LOGIC ---
+    (() => {
+        // --- GLOBAL VARIABLES & CONFIG ---
+        const sourceColors = ['#22d3ee', '#f472b6', '#a3e635', '#fde047', '#f97316', '#8b5cf6'];
+        const YOUTUBE_API_URL = 'https://script.google.com/macros/s/AKfycbyPeYo0tMNkmVgfRcJQmrL-ak-z9ayckiUG2RqRVDphzJ3640IYe7XEpoFGJcieQ8dO/exec';
+
+        let youtubeChartInstances = {};
+        let youtubeAllVideos = [];
+
+        // --- CORE UI LOGIC ---
+        const setupTagInput = (inputId, buttonId, containerId) => {
+            const input = document.getElementById(inputId);
+            const button = document.getElementById(buttonId);
+            const container = document.getElementById(containerId);
+
+            const addTag = (value) => {
+                if (!value) return;
+                const tag = document.createElement('div');
+                tag.className = 'url-tag';
+                
+                const textSpan = document.createElement('span');
+                textSpan.textContent = value;
+                
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'remove-tag';
+                removeBtn.innerHTML = '&times;';
+                removeBtn.onclick = () => tag.remove();
+                
+                tag.appendChild(textSpan);
+                tag.appendChild(removeBtn);
+                container.appendChild(tag);
+                input.value = '';
+                input.focus();
+            };
+
+            button.addEventListener('click', () => addTag(input.value.trim()));
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    addTag(input.value.trim());
+                }
+            });
+        }
+        
+        setupTagInput('youtubeUrlInput', 'addYoutubeUrlBtn', 'youtube-url-tags-container');
+
+        // --- HELPER FUNCTIONS ---
+        const setupFilterButtons = (containerId, sources, colors, clickHandler) => {
+            const filtersContainer = document.getElementById(containerId);
+            if (!filtersContainer) return;
+            filtersContainer.innerHTML = '';
+
+            const createFilterButton = (text, sourceName, color) => {
+                const button = document.createElement('button');
+                button.className = 'filter-btn';
+                button.textContent = text;
+                button.dataset.source = sourceName;
+                
+                button.addEventListener('click', () => {
+                    filtersContainer.querySelectorAll('.filter-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                        btn.style.backgroundColor = 'var(--border-color)';
+                        btn.style.color = 'var(--text-secondary)';
+                    });
+                    button.classList.add('active');
+                    button.style.backgroundColor = color;
+                    button.style.color = 'white';
+                    clickHandler(sourceName);
+                });
+                filtersContainer.appendChild(button);
+                return button;
+            };
+
+            const allBtn = createFilterButton('All', 'all', '#6b7280');
+            sources.forEach((source, index) => createFilterButton(source, source, colors[index % colors.length]));
+            
+            if (filtersContainer.querySelector('.filter-btn')) {
+               filtersContainer.querySelector('.filter-btn').click();
+            }
+        }
+
+        const commonStopWords = new Set(['a', 'about', 'above', 'after', 'again', 'against', 'all', 'am', 'an', 'and', 'any', 'are', 'as', 'at', 'be', 'because', 'been', 'before', 'being', 'below', 'between', 'both', 'but', 'by', 'can', 'did', 'do', 'does', 'doing', 'don', 'down', 'during', 'each', 'few', 'for', 'from', 'further', 'had', 'has', 'have', 'having', 'he', 'her', 'here', 'hers', 'herself', 'him', 'himself', 'his', 'how', 'i', 'if', 'in', 'into', 'is', 'it', 'its', 'itself', 'just', 'me', 'more', 'most', 'my', 'myself', 'no', 'nor', 'not', 'now', 'o', 'of', 'off', 'on', 'once', 'only', 'or', 'other', 'our', 'ourselves', 'out', 'over', 'own', 's', 'same', 'she', 'should', 'so', 'some', 'such', 't', 'than', 'that', 'the', 'their', 'theirs', 'them', 'themselves', 'then', 'there', 'these', 'they', 'this', 'those', 'through', 'to', 'too', 'under', 'until', 'up', 'very', 'was', 'we', 'were', 'what', 'when', 'where', 'which', 'while', 'who', 'whom', 'why', 'will', 'with', 'you', 'your', 'yours', 'yourself', 'yourselves', 'says', 'news', 'live', 'updates', 'watch', 'video', 'youtube']);
+        
+        function getKeywordFrequency(items, textProperty) {
+            const wordCounts = {};
+            const allText = items.map(item => item[textProperty]).join(' ');
+            const words = allText.toLowerCase().match(/\b\w+\b/g)?.filter(word => !commonStopWords.has(word) && isNaN(word)) || [];
+            
+            words.forEach(word => { wordCounts[word] = (wordCounts[word] || 0) + 1; });
+            return Object.entries(wordCounts).sort((a, b) => b[1] - a[1]).slice(0, 50);
+        }
+
+        function destroyCharts(chartInstances) {
+            Object.values(chartInstances).forEach(chart => chart?.destroy());
+        }
+
+        // --- MAIN FORM SUBMISSION ---
+        const youtubeForm = document.getElementById('youtubeForm');
+        youtubeForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const loader = document.getElementById('youtube-loader');
+            const resultsContainer = document.getElementById('youtube-results-container');
+            const scorecardSection = document.getElementById('youtube-scorecard-section');
+            const dashboardGrid = document.getElementById('youtube-dashboard-grid');
+
+            loader.style.display = 'block';
+            resultsContainer.innerHTML = '';
+            scorecardSection.style.display = 'none';
+            dashboardGrid.style.display = 'none';
+            destroyCharts(youtubeChartInstances);
+
+            const urls = Array.from(document.querySelectorAll('#youtube-url-tags-container .url-tag span')).map(span => span.textContent.trim());
+
+            if (urls.length === 0) {
+                resultsContainer.innerHTML = `<div class="error-message">Please add at least one YouTube channel URL.</div>`;
+                loader.style.display = 'none';
+                return;
+            }
+
+            const requestUrl = `${YOUTUBE_API_URL}?urls=${encodeURIComponent(urls.join(','))}`;
+
+            try {
+                const response = await fetch(requestUrl);
+                const result = await response.json();
+
+                if (result.errors && result.errors.length > 0) {
+                    result.errors.forEach(err => {
+                        resultsContainer.innerHTML += `<div class="error-message">⚠️ Error for <strong>${err.url}</strong>: ${err.error}</div>`;
+                    });
+                }
+
+                if (result.data && result.data.length > 0) {
+                    youtubeAllVideos = result.data.map(video => ({
+                        ...video,
+                        publicationTime: new Date(video.publicationTime)
+                    }));
+                    displayYoutubeDashboard();
+                } else if (resultsContainer.innerHTML === '') {
+                    resultsContainer.innerHTML = `<div class="error-message">No videos found in the last 24 hours for the provided channels.</div>`;
+                }
+
+            } catch (error) {
+                resultsContainer.innerHTML = `<div class="error-message">⚠️ A critical error occurred: ${error.message}</div>`;
+            } finally {
+                loader.style.display = 'none';
+            }
+        });
+
+        function displayYoutubeDashboard() {
+            document.getElementById('youtube-scorecard-section').style.display = 'grid';
+            document.getElementById('youtube-dashboard-grid').style.display = 'grid';
+            
+            const channels = [...new Set(youtubeAllVideos.map(v => v.channelName))];
+            const channelColors = channels.map((_, i) => sourceColors[i % sourceColors.length]);
+
+            updateYoutubeScorecards(youtubeAllVideos, channels, channelColors);
+            
+            setupFilterButtons('youtube-top-videos-filters', channels, channelColors, (filter) => updateYoutubeTopVideos(filter));
+            setupFilterButtons('youtube-topics-filters', channels, channelColors, (filter) => updateYoutubeKeywords(filter));
+            setupFilterButtons('youtube-hourly-views-filters', channels, channelColors, (filter) => updateYoutubeViewsChart(filter));
+            setupFilterButtons('youtube-upload-freq-filters', channels, channelColors, (filter) => updateYoutubeFrequencyChart(filter));
+
+            // Call new pie chart functions
+            updateUploadsPieChart(channels, channelColors);
+            updateViewsPieChart(channels, channelColors);
+        }
+
+        function updateYoutubeScorecards(videos, channels, colors) {
+            const scorecardSection = document.getElementById('youtube-scorecard-section');
+            scorecardSection.innerHTML = '';
+            const now = new Date();
+
+            channels.forEach((channel, index) => {
+                const channelVideos = videos.filter(v => v.channelName === channel);
+                if (channelVideos.length === 0) return;
+
+                const calcStatsInHours = (hours) => {
+                    const recentVideos = channelVideos.filter(v => (now - v.publicationTime) / 36e5 <= hours);
+                    return {
+                        views: recentVideos.reduce((sum, v) => sum + v.viewCount, 0),
+                        uploads: recentVideos.length
+                    };
+                };
+
+                const statsLast1Hour = calcStatsInHours(1);
+                const statsLast6Hours = calcStatsInHours(6);
+                const statsLast12Hours = calcStatsInHours(12);
+                const statsLast24Hours = calcStatsInHours(24);
+                
+                const avgViewsPerHour = (statsLast24Hours.views / 24).toFixed(0);
+                const avgUploadsPerHour = (statsLast24Hours.uploads / 24).toFixed(1);
+
+                const group = document.createElement('div');
+                group.className = 'source-scorecard-group';
+                group.style.borderColor = colors[index % colors.length];
+                group.innerHTML = `
+                    <h2>${channel}</h2>
+                    <h3>Views</h3>
+                    <div class="scorecard-grid">
+                        <div class="scorecard"><div class="value" style="color:${colors[index]}">${statsLast1Hour.views.toLocaleString()}</div><div class="label">Last 1h</div></div>
+                        <div class="scorecard"><div class="value" style="color:${colors[index]}">${statsLast6Hours.views.toLocaleString()}</div><div class="label">Last 6h</div></div>
+                        <div class="scorecard"><div class="value" style="color:${colors[index]}">${statsLast12Hours.views.toLocaleString()}</div><div class="label">Last 12h</div></div>
+                        <div class="scorecard"><div class="value" style="color:${colors[index]}">${parseInt(avgViewsPerHour).toLocaleString()}</div><div class="label">Avg/Hour (24h)</div></div>
+                    </div>
+                    <h3>Uploads</h3>
+                    <div class="scorecard-grid">
+                        <div class="scorecard"><div class="value" style="color:${colors[index]}">${statsLast1Hour.uploads.toLocaleString()}</div><div class="label">Last 1h</div></div>
+                        <div class="scorecard"><div class="value" style="color:${colors[index]}">${statsLast6Hours.uploads.toLocaleString()}</div><div class="label">Last 6h</div></div>
+                        <div class="scorecard"><div class="value" style="color:${colors[index]}">${statsLast12Hours.uploads.toLocaleString()}</div><div class="label">Last 12h</div></div>
+                        <div class="scorecard"><div class="value" style="color:${colors[index]}">${avgUploadsPerHour}</div><div class="label">Avg/Hour (24h)</div></div>
+                    </div>`;
+                scorecardSection.appendChild(group);
+            });
+        }
+
+        function updateYoutubeTopVideos(channelFilter) {
+            const videosToDisplay = channelFilter === 'all' ? youtubeAllVideos : youtubeAllVideos.filter(v => v.channelName === channelFilter);
+            const sortedVideos = [...videosToDisplay].sort((a, b) => b.viewCount - a.viewCount);
+            const tableBody = document.getElementById('youtubeTopVideosBody');
+            tableBody.innerHTML = '';
+
+            sortedVideos.forEach(video => {
+                const istTime = video.publicationTime.toLocaleString('en-IN', { timeZone: 'Asia/Kolkata', dateStyle: 'medium', timeStyle: 'short' });
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${video.channelName}</td>
+                    <td><a href="${video.url}" target="_blank" rel="noopener noreferrer">${video.title}</a></td>
+                    <td>${video.viewCount.toLocaleString()}</td>
+                    <td>${video.commentCount.toLocaleString()}</td>
+                    <td>${istTime}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function updateYoutubeKeywords(channelFilter) {
+            const videosToAnalyze = channelFilter === 'all' ? youtubeAllVideos : youtubeAllVideos.filter(v => v.channelName === channelFilter);
+            const tableBody = document.getElementById('youtubeKeywordsBody');
+            tableBody.innerHTML = '';
+            const wordList = getKeywordFrequency(videosToAnalyze, 'title');
+            if (wordList.length > 0) {
+                wordList.forEach(([keyword, frequency]) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td>${keyword}</td><td>${frequency}</td>`;
+                    tableBody.appendChild(row);
+                });
+            }
+        }
+        
+        // --- NEW PIE CHART FUNCTIONS ---
+        function updateUploadsPieChart(channels, colors) {
+            if (youtubeChartInstances.uploadsPie) youtubeChartInstances.uploadsPie.destroy();
+
+            const data = channels.map(channel => 
+                youtubeAllVideos.filter(v => v.channelName === channel).length
+            );
+
+            const ctx = document.getElementById('youtubeUploadsPieChart').getContext('2d');
+            youtubeChartInstances.uploadsPie = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: channels,
+                    datasets: [{
+                        label: 'Uploads',
+                        data: data,
+                        backgroundColor: colors,
+                        borderColor: '#1f2937',
+                        borderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top', labels: { color: '#f9fafb' } } }
+                }
+            });
+        }
+
+        function updateViewsPieChart(channels, colors) {
+            if (youtubeChartInstances.viewsPie) youtubeChartInstances.viewsPie.destroy();
+
+            const data = channels.map(channel => 
+                youtubeAllVideos.filter(v => v.channelName === channel)
+                               .reduce((sum, v) => sum + v.viewCount, 0)
+            );
+
+            const ctx = document.getElementById('youtubeViewsPieChart').getContext('2d');
+            youtubeChartInstances.viewsPie = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: channels,
+                    datasets: [{
+                        label: 'Views',
+                        data: data,
+                        backgroundColor: colors,
+                        borderColor: '#1f2937',
+                        borderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top', labels: { color: '#f9fafb' } } }
+                }
+            });
+        }
+
+        function updateYoutubeViewsChart(channelFilter) {
+            const videosToAnalyze = channelFilter === 'all' ? youtubeAllVideos : youtubeAllVideos.filter(v => v.channelName === channelFilter);
+            if (youtubeChartInstances.views) youtubeChartInstances.views.destroy();
+            
+            const now = new Date();
+            const labels = Array.from({length: 24}, (_, i) => {
+                const d = new Date(now);
+                d.setHours(now.getHours() - i);
+                return d.getHours() + ':00';
+            }).reverse();
+
+            const hourlyViews = Array(24).fill(0);
+            videosToAnalyze.forEach(video => {
+                const hoursAgo = Math.floor((now - video.publicationTime) / 36e5);
+                if (hoursAgo >= 0 && hoursAgo < 24) {
+                    hourlyViews[23 - hoursAgo] += video.viewCount;
+                }
+            });
+
+            const ctx = document.getElementById('youtubeViewsChart').getContext('2d');
+            youtubeChartInstances.views = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels,
+                    datasets: [{
+                        label: 'Total Views',
+                        data: hourlyViews,
+                        backgroundColor: '#ff000080',
+                        borderColor: '#ff0000',
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true, ticks: {color: '#9ca3af'} }, x: { ticks: {color: '#9ca3af'} } }
+                }
+            });
+        }
+
+        function updateYoutubeFrequencyChart(channelFilter) {
+            if (youtubeChartInstances.freq) youtubeChartInstances.freq.destroy();
+            
+            const allChannels = [...new Set(youtubeAllVideos.map(v => v.channelName))];
+            const channelsToDisplay = channelFilter === 'all' ? allChannels : [channelFilter];
+            
+            const now = new Date();
+            const labels = Array.from({length: 24}, (_, i) => {
+                const d = new Date(now);
+                d.setHours(now.getHours() - i);
+                return d.getHours() + ':00';
+            }).reverse();
+
+            const datasets = channelsToDisplay.map((channel) => {
+                const channelVideos = youtubeAllVideos.filter(v => v.channelName === channel);
+                const colorIndex = allChannels.indexOf(channel);
+                const color = sourceColors[colorIndex % sourceColors.length];
+                const hourlyCounts = Array(24).fill(0);
+                channelVideos.forEach(video => {
+                    const hoursAgo = Math.floor((now - video.publicationTime) / 36e5);
+                    if (hoursAgo >= 0 && hoursAgo < 24) {
+                        hourlyCounts[23 - hoursAgo]++;
+                    }
+                });
+                return {
+                    label: channel,
+                    data: hourlyCounts,
+                    borderColor: color,
+                    backgroundColor: `${color}33`,
+                    fill: true,
+                    tension: 0.4
+                };
+            });
+
+            const ctx = document.getElementById('youtubeFrequencyChart').getContext('2d');
+            youtubeChartInstances.freq = new Chart(ctx, {
+                type: 'line',
+                data: { labels, datasets }, 
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { labels: { color: '#f9fafb' } } },
+                    scales: { 
+                        y: { beginAtZero: true, ticks: { precision: 0, color: '#9ca3af' }, grid: {color: '#374151'} }, 
+                        x: { ticks: { color: '#9ca3af' }, grid: {color: '#374151'} } 
+                    }
+                }
+            });
+        }
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Platform Analysis Dashboard</title>
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-QYT23DZY7C"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-QYT23DZY7C');
+    </script>
+    
+    <link rel="stylesheet" href="style.css">
+
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            display: flex;
+            background-color: #0e0e13;
+            color: #fff;
+        }
+        #sidebar {
+            width: 250px;
+            background: linear-gradient(180deg, #1a1a25, #14141f);
+            padding: 20px;
+            height: 100vh;
+            position: fixed;
+            top: 0; left: 0;
+            overflow-y: auto;
+        }
+        #sidebar h1 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: #b78aff;
+        }
+        #sidebar ul {
+            list-style: none;
+            padding: 0;
+        }
+        #sidebar li {
+            margin-bottom: 12px;
+        }
+        .tab-link {
+            color: #d1d1d1;
+            text-decoration: none;
+            display: block;
+            padding: 10px 12px;
+            border-radius: 6px;
+            transition: background 0.2s;
+        }
+        .tab-link:hover, .tab-link.active {
+            background-color: #2b2b3a;
+            color: #fff;
+        }
+        #main-content {
+            margin-left: 250px;
+            flex: 1;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        /* NEXID text styling */
+        .nexid-title {
+            font-size: 5rem;
+            font-weight: 700;
+            letter-spacing: 4px;
+            color: #b78aff;
+            animation: fadeIn 2s ease-in-out infinite alternate;
+        }
+        .nexid-title span {
+            font-size: 6rem;
+            color: #d49aff;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0.6; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1.02); }
+        }
+        #credit-footer {
+            position: fixed;
+            bottom: 10px;
+            left: 270px;
+            font-size: 0.9rem;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <aside id="sidebar">
+        <h1>Dashboard</h1>
+        <nav>
+            <ul>
+                <li><a href="#" class="tab-link active" data-page="sitemap.html">Sitemap Web Analysis</a></li>
+                <li><a href="#" class="tab-link" data-page="youtube.html">YouTube</a></li>
+                <li><a href="#" class="tab-link" data-page="semrush.html">Semrush</a></li>
+                <li><a href="#" class="tab-link" data-page="facebook.html">Facebook</a></li>
+                <li><a href="#" class="tab-link" data-page="twitter.html">Twitter</a></li>
+                <li><a href="#" class="tab-link" data-page="linkedin.html">LinkedIn</a></li>
+                <li><a href="#" class="tab-link" data-page="reddit.html">Reddit</a></li>
+                <li><a href="#" class="tab-link" data-page="comscore.html">Comscore</a></li>
+                <li><a href="#" class="tab-link" data-page="instagram.html">Instagram</a></li>
+            </ul>
+        </nav>
+    </aside>
+
+    <main id="main-content">
+        <div class="nexid-title">NE<span>X</span>ID</div>
+    </main>
+
+    <div id="credit-footer">
+        By Nexid
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const mainContent = document.getElementById('main-content');
+            const tabLinks = document.querySelectorAll('.tab-link');
+
+            const loadPage = async (pageUrl) => {
+                try {
+                    const res = await fetch(pageUrl);
+                    if (!res.ok) throw new Error('Failed to load page');
+                    const html = await res.text();
+                    mainContent.innerHTML = html;
+                } catch (err) {
+                    mainContent.innerHTML = `<p style="color:red;">Error loading ${pageUrl}</p>`;
+                }
+            };
+
+            tabLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    tabLinks.forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                    loadPage(link.dataset.page);
+                });
+            });
+        });
+    </script>
+</body>
+</html>

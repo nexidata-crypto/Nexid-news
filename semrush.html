@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Semrush Traffic Analysis</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg-color: #111827;
+            --card-color: #1f2937;
+            --border-color: #374151;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --accent-1: #ff6a1a; /* Semrush Orange */
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            padding: 2rem;
+        }
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .card {
+            background-color: var(--card-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+        .form-card { text-align: center; border: none; background-color: transparent; padding-top: 0; }
+        .form-card h1 { font-size: 2.5rem; font-weight: 700; letter-spacing: -1px; }
+        .form-card p { margin-top: 0.5rem; color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 1.5rem; }
+        
+        .url-input-group { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+        .url-input { flex-grow: 1; padding: 14px 18px; font-size: 1rem; background-color: var(--card-color); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 0.5rem; transition: all 0.2s; }
+        .url-input:focus { outline: none; border-color: var(--accent-1); box-shadow: 0 0 0 4px rgba(255, 106, 26, 0.2); }
+        .analyze-btn { width: 100%; background-image: linear-gradient(to right, var(--accent-1), #ff8c4c); color: white; font-size: 1rem; font-weight: 600; padding: 14px 20px; border: none; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; }
+        .analyze-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(255, 106, 26, 0.2); }
+        
+        .fade-in { animation: fadeInAnimation 0.7s ease-in-out forwards; }
+        @keyframes fadeInAnimation { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .scorecard-section { display: none; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .scorecard-group { border-left: 4px solid var(--accent-1); padding-left: 1.5rem; }
+        .scorecard-group h2 { font-size: 1.25rem; margin-bottom: 1rem; font-weight: 600; }
+        .scorecard-group h3 { font-size: 1rem; font-weight: 600; color: var(--text-secondary); margin-top: 1.5rem; margin-bottom: 1rem; }
+        .scorecard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 1rem; }
+        .scorecard { background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 0.5rem; padding: 1rem; text-align: center; }
+        .scorecard .value { font-size: 1.75rem; font-weight: 700; color: var(--accent-1); }
+        .scorecard .label { font-size: 0.85rem; color: var(--text-secondary); margin-top: 0.25rem; }
+        .scorecard .change { font-size: 0.8rem; margin-top: 0.5rem; }
+        .change.positive { color: #a3e635; }
+        .change.negative { color: #f472b6; }
+
+        .loader { display: none; margin: 3rem auto 0; width: 48px; height: 48px; border: 5px solid var(--border-color); border-bottom-color: var(--accent-1); border-radius: 50%; animation: rotation 1s linear infinite; }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .error-message { text-align: center; padding: 1rem; background-color: #991b1b; color: #fecaca; border: 1px solid #ef4444; border-radius: 0.5rem; font-weight: 500; margin-top: 2rem; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <section class="card form-card">
+            <h1>Semrush Traffic Analysis</h1>
+            <p>Enter a domain to get the latest traffic overview.</p>
+            <form id="semrushForm">
+                <div class="url-input-group">
+                    <input type="text" id="domainInput" class="url-input" placeholder="e.g., google.com">
+                </div>
+                <button type="submit" id="analyzeBtn" class="analyze-btn">Analyze Domain</button>
+            </form>
+        </section>
+
+        <div id="loader" class="loader"></div>
+        <div id="results-container"></div>
+
+        <section id="scorecard-section" class="scorecard-section"></section>
+    </div>
+
+    <script>
+    (() => {
+        const semrushForm = document.getElementById('semrushForm');
+        const domainInput = document.getElementById('domainInput');
+        const loader = document.getElementById('loader');
+        const resultsContainer = document.getElementById('results-container');
+        const scorecardSection = document.getElementById('scorecard-section');
+        
+        // IMPORTANT: Replace this with your actual Google Apps Script URL
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxoJiLDg6IRq5Whm05syo_km-y4u_NSvn4v7nKzK5J3-e5uHvLMRvexGF_iw5Da130nzQ/exec';
+
+        semrushForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const domain = domainInput.value.trim();
+            if (!domain) {
+                resultsContainer.innerHTML = `<div class="error-message">Please enter a domain.</div>`;
+                return;
+            }
+
+            loader.style.display = 'block';
+            resultsContainer.innerHTML = '';
+            scorecardSection.style.display = 'none';
+            scorecardSection.innerHTML = '';
+
+            try {
+                const response = await fetch(`${APPS_SCRIPT_URL}?domain=${encodeURIComponent(domain)}`);
+                const result = await response.json();
+
+                if (result.error) {
+                    throw new Error(result.error);
+                }
+
+                displayScorecards(result);
+
+            } catch (error) {
+                resultsContainer.innerHTML = `<div class="error-message">⚠️ Error: ${error.message}</div>`;
+            } finally {
+                loader.style.display = 'none';
+            }
+        });
+
+        function displayScorecards(data) {
+            scorecardSection.innerHTML = ''; // Clear previous results
+
+            const createScorecard = (title, value, prevValue, formatFn) => {
+                const val = formatFn(value);
+                let changeHtml = '';
+                if (prevValue !== undefined && prevValue !== null) {
+                    const change = value - prevValue;
+                    const changePercent = prevValue !== 0 ? (change / prevValue * 100).toFixed(1) : 0;
+                    const changeClass = change >= 0 ? 'positive' : 'negative';
+                    const sign = change >= 0 ? '+' : '';
+                    changeHtml = `<div class="change ${changeClass}">${sign}${changePercent}%</div>`;
+                }
+                return `
+                    <div class="scorecard">
+                        <div class="value">${val}</div>
+                        <div class="label">${title}</div>
+                        ${changeHtml}
+                    </div>`;
+            };
+
+            const formatNumber = (num) => num.toLocaleString();
+            const formatPercent = (num) => `${(num * 100).toFixed(1)}%`;
+            const formatSeconds = (num) => `${num}s`;
+            const formatFloat = (num) => num.toFixed(2);
+
+            const overviewHTML = `
+                <div class="scorecard-group">
+                    <h2>Overview - ${data.display_date}</h2>
+                    <div class="scorecard-grid">
+                        ${createScorecard('Visits', data.visits, data.prev_visits, formatNumber)}
+                        ${createScorecard('Unique Users', data.users, data.prev_users, formatNumber)}
+                        ${createScorecard('Bounce Rate', data.bounce_rate, data.prev_bounce_rate, formatPercent)}
+                        ${createScorecard('Pages / Visit', data.pages_per_visit, data.prev_pages_per_visit, formatFloat)}
+                        ${createScorecard('Avg. Time on Site', data.time_on_site, data.prev_time_on_site, formatSeconds)}
+                    </div>
+                </div>`;
+
+            const trafficSourcesHTML = `
+                <div class="scorecard-group">
+                    <h2>Traffic Sources</h2>
+                    <div class="scorecard-grid">
+                        ${createScorecard('Direct', data.direct, data.prev_direct, formatNumber)}
+                        ${createScorecard('Search', data.search, (data.prev_search_organic + data.prev_search_paid), formatNumber)}
+                        ${createScorecard('Referral', data.referral, data.prev_referral, formatNumber)}
+                        ${createScorecard('Social', data.social, (data.prev_social_organic + data.prev_social_paid), formatNumber)}
+                        ${createScorecard('Mail', data.mail, data.prev_mail, formatNumber)}
+                        ${createScorecard('Display Ads', data.display_ad, data.prev_display_ad, formatNumber)}
+                    </div>
+                </div>`;
+            
+            const deviceShareHTML = `
+                 <div class="scorecard-group">
+                    <h2>Device Share</h2>
+                    <div class="scorecard-grid">
+                        ${createScorecard('Desktop', data.desktop_share, null, formatPercent)}
+                        ${createScorecard('Mobile', data.mobile_share, null, formatPercent)}
+                    </div>
+                </div>`;
+
+            scorecardSection.innerHTML = overviewHTML + trafficSourcesHTML + deviceShareHTML;
+            scorecardSection.style.display = 'grid';
+        }
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparative News Analysis</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Chart.js Library -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Optional: Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-QYT23DZY7C"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-QYT23DZY7C');
+    </script>
+
+    <style>
+        :root {
+            --bg-color: #111827;
+            --card-color: #1f2937;
+            --border-color: #374151;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --accent-1: #22d3ee;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html { scroll-behavior: smooth; }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            padding: 2rem;
+        }
+        
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        .card {
+            background-color: var(--card-color);
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            border: 1px solid var(--border-color);
+            margin-bottom: 2rem;
+        }
+        .form-card { text-align: center; border: none; background-color: transparent; padding-top: 0; }
+        .form-card h1 { font-size: 2.5rem; font-weight: 700; letter-spacing: -1px; }
+        .form-card p { margin-top: 0.5rem; color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 1.5rem; }
+        
+        .url-input-group { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+        .url-input { flex-grow: 1; padding: 14px 18px; font-size: 1rem; background-color: var(--card-color); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 0.5rem; transition: all 0.2s; }
+        .url-input:focus { outline: none; border-color: var(--accent-1); box-shadow: 0 0 0 4px rgba(34, 211, 238, 0.2); }
+        .add-url-btn { flex-shrink: 0; background-color: var(--border-color); color: var(--text-primary); font-weight: 600; padding: 0 1.5rem; border: none; border-radius: 0.5rem; cursor: pointer; transition: background-color 0.2s; }
+        .add-url-btn:hover { background-color: #4b5563; }
+        .url-tags-container { display: flex; flex-wrap: wrap; gap: 0.5rem; min-height: 2.5rem; justify-content: center; margin-bottom: 1.5rem; }
+        .url-tag { display: flex; align-items: center; background-color: var(--bg-color); border: 1px solid var(--border-color); padding: 0.5rem 0.75rem; border-radius: 2rem; font-size: 0.9rem; animation: fadeInAnimation 0.3s; }
+        .url-tag span {
+            margin-right: 0.5rem;
+        }
+        .url-tag .remove-tag { margin-left: 0.5rem; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1rem; line-height: 1; }
+        .url-tag .remove-tag:hover { color: var(--text-primary); }
+        .analyze-btn { width: 100%; background-image: linear-gradient(to right, var(--accent-1), #67e8f9); color: var(--bg-color); font-size: 1rem; font-weight: 600; padding: 14px 20px; border: none; border-radius: 0.5rem; cursor: pointer; transition: all 0.2s; }
+        .analyze-btn:hover { transform: translateY(-2px); box-shadow: 0 4px 20px rgba(34, 211, 238, 0.2); }
+        
+        .fade-in { animation: fadeInAnimation 0.7s ease-in-out forwards; }
+        @keyframes fadeInAnimation { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        #scorecard-section { display: none; gap: 1.5rem; margin-bottom: 2rem; }
+        .source-scorecard-group { border-left: 4px solid; padding-left: 1.5rem; }
+        .source-scorecard-group h2 { font-size: 1.25rem; margin-bottom: 1rem; font-weight: 600; }
+        .scorecard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; }
+        .scorecard { background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 0.5rem; padding: 1rem; text-align: center; }
+        .scorecard .value { font-size: 2rem; font-weight: 700; }
+        .scorecard .label { font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.25rem; }
+
+        #dashboard { display: none; grid-template-columns: repeat(3, 1fr); gap: 2rem; grid-template-areas: "timeline timeline pie-chart" "ai-insights ai-insights keyword-table" "category-analysis category-analysis category-analysis" "datatable datatable datatable"; }
+        .viz-card h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; }
+        .chart-container { position: relative; height: 350px; width: 100%; }
+        #timeline-card { grid-area: timeline; }
+        #pie-chart-card { grid-area: pie-chart; }
+        #ai-insights-card { grid-area: ai-insights; }
+        #keyword-table-card { grid-area: keyword-table; }
+        #category-analysis-card { grid-area: category-analysis; }
+        #datatable-card { grid-area: datatable; }
+        
+        .filters-container { display: flex; flex-wrap: nowrap; gap: 0.5rem; margin-bottom: 1.5rem; overflow-x: auto; padding-bottom: 10px; }
+        .filter-btn { background-color: var(--border-color); color: var(--text-secondary); border: none; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+        .filter-btn.active { color: var(--bg-color); font-weight: 600; transform: scale(1.05); }
+
+        #ai-summary-content { height: 350px; overflow-y: auto; color: var(--text-secondary); line-height: 1.6; }
+        #ai-summary-content p { margin-bottom: 1rem; }
+        #ai-summary-content ul { margin-left: 1.5rem; margin-bottom: 1rem; list-style-type: '✨'; padding-left: 1rem;}
+        #ai-summary-content li { margin-bottom: 0.5rem; padding-left: 0.5rem;}
+        .ai-loader { display: flex; justify-content: center; align-items: center; height: 100%; font-style: italic; }
+
+        .table-wrapper { max-height: 350px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        thead th { background-color: #374151; position: sticky; top: 0; font-weight: 600; }
+        tbody tr { transition: background-color 0.2s; }
+        tbody tr:hover { background-color: #374151; }
+        td a { color: var(--text-primary); text-decoration: none; display: block; }
+
+        #loader { display: none; margin: 3rem auto 0; width: 48px; height: 48px; border: 5px solid var(--border-color); border-bottom-color: var(--accent-1); border-radius: 50%; animation: rotation 1s linear infinite; }
+        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .error-message { text-align: center; padding: 1rem; background-color: #991b1b; color: #fecaca; border: 1px solid #ef4444; border-radius: 0.5rem; font-weight: 500; margin-top: 2rem; }
+        
+        @media (max-width: 1200px) { #dashboard { grid-template-columns: 1fr; grid-template-areas: "timeline" "pie-chart" "ai-insights" "keyword-table" "category-analysis" "datatable"; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <section class="card form-card">
+            <h1>Comparative News Analysis</h1>
+            <p>Enter news site URLs below for an instant competitive overview.</p>
+            <form id="newsForm">
+                <div class="url-input-group">
+                    <input type="text" id="newsUrlInput" class="url-input" placeholder="e.g., reuters.com">
+                    <button type="button" id="addUrlBtn" class="add-url-btn">Add</button>
+                </div>
+                <div id="url-tags-container" class="url-tags-container"></div>
+                <button type="submit" id="analyzeBtn" class="analyze-btn">Analyze</button>
+            </form>
+        </section>
+
+        <div id="loader" class="loader"></div>
+        <div id="results-container"></div>
+
+        <section id="scorecard-section" class="scorecard-section"></section>
+        
+        <section id="dashboard" class="dashboard-grid">
+            <div id="timeline-card" class="card viz-card">
+                <h2>Publication Timeline (24h)</h2>
+                <div class="chart-container"><canvas id="timelineChart"></canvas></div>
+            </div>
+            <div id="pie-chart-card" class="card viz-card">
+                <h2>Article Distribution (24h)</h2>
+                <div class="chart-container"><canvas id="distributionPieChart"></canvas></div>
+            </div>
+            <div id="ai-insights-card" class="card viz-card">
+                <h2>✨ AI-Powered Insights</h2>
+                <div id="ai-insights-filters" class="filters-container"></div>
+                <div id="ai-summary-content"></div>
+            </div>
+            <div id="keyword-table-card" class="card viz-card">
+                <h2>Trending Topics from Titles</h2>
+                <div id="keyword-filters" class="filters-container"></div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th>Keyword</th><th>Frequency</th></tr></thead>
+                        <tbody id="keywordTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="category-analysis-card" class="card viz-card">
+                <h2>Category Trending</h2>
+                <div id="category-filters" class="filters-container"></div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th>Category</th><th>Source</th><th>Frequency</th></tr></thead>
+                        <tbody id="categoryTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="datatable-card" class="card viz-card">
+                <h2>Recent Article Feed</h2>
+                <div id="article-feed-filters" class="filters-container"></div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead><tr><th>Channel</th><th>Article Title</th><th>Publication Time</th></tr></thead>
+                        <tbody id="articlesTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <script>
+    // --- SITEMAP ANALYSIS LOGIC (SELF-CONTAINED & CORRECTED) ---
+    (() => {
+        const newsForm = document.getElementById('newsForm');
+        const newsUrlInput = document.getElementById('newsUrlInput');
+        const addUrlBtn = document.getElementById('addUrlBtn');
+        const urlTagsContainer = document.getElementById('url-tags-container');
+        const resultsContainer = document.getElementById('results-container');
+        const loader = document.getElementById('loader');
+        const scorecardSection = document.getElementById('scorecard-section');
+        const dashboard = document.getElementById('dashboard');
+        let timelineChartInstance, distributionPieChartInstance;
+        let allArticlesData = [];
+        const sourceColors = ['#22d3ee', '#f472b6', '#a3e635', '#fde047', '#f97316', '#8b5cf6'];
+        // This URL should point to your deployed Google Apps Script
+        const API_URL = 'https://script.google.com/macros/s/AKfycbxSXBPKvT4HxXNig1DiE2D3147l9Syq6BIIcXn9YP1b2Ee8tofTJrZtYZ7FAstG5fB8MA/exec';
+
+        const addUrlTag = (url) => {
+            if (!url) return;
+
+            const tag = document.createElement('div');
+            tag.className = 'url-tag';
+            
+            const textSpan = document.createElement('span');
+            textSpan.textContent = url;
+            
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-tag';
+            removeBtn.innerHTML = '&times;';
+            removeBtn.onclick = () => tag.remove();
+            
+            tag.appendChild(textSpan);
+            tag.appendChild(removeBtn);
+            urlTagsContainer.appendChild(tag);
+            
+            newsUrlInput.value = '';
+            newsUrlInput.focus();
+        };
+
+        addUrlBtn.addEventListener('click', () => addUrlTag(newsUrlInput.value.trim()));
+        
+        newsUrlInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                addUrlTag(newsUrlInput.value.trim());
+            }
+        });
+
+        newsForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            loader.style.display = 'block';
+            resultsContainer.innerHTML = '';
+            scorecardSection.style.display = 'none';
+            scorecardSection.innerHTML = '';
+            dashboard.style.display = 'none';
+            if (timelineChartInstance) timelineChartInstance.destroy();
+            if (distributionPieChartInstance) distributionPieChartInstance.destroy();
+
+            const urls = Array.from(urlTagsContainer.querySelectorAll('.url-tag'))
+                .map(tag => tag.querySelector('span').textContent.trim());
+
+            if (urls.length === 0) {
+                resultsContainer.innerHTML = `<div class="error-message">Please add at least one valid URL.</div>`;
+                loader.style.display = 'none';
+                return;
+            }
+
+            const fetchPromises = urls.map(url => {
+                let targetUrl = url;
+                if (!targetUrl.startsWith('http://') && !targetUrl.startsWith('https://')) {
+                    targetUrl = 'https://' + targetUrl;
+                }
+                const requestUrl = `${API_URL}?url=${encodeURIComponent(targetUrl)}`;
+                return fetch(requestUrl).then(res => res.json());
+            });
+
+            try {
+                const results = await Promise.allSettled(fetchPromises);
+                allArticlesData = [];
+                let hasSuccessfulData = false;
+
+                results.forEach((result, index) => {
+                    const sourceName = new URL(urls[index].startsWith('http') ? urls[index] : `https://${urls[index]}`).hostname.replace('www.', '');
+                    if (result.status === 'fulfilled' && !result.value.error && result.value.data && result.value.data.length > 0) {
+                        hasSuccessfulData = true;
+                        result.value.data.forEach(article => {
+                            article.sourceName = sourceName;
+                            article.sourceColor = sourceColors[index % sourceColors.length];
+                        });
+                        allArticlesData = allArticlesData.concat(result.value.data);
+                    } else {
+                        const errorReason = result.status === 'rejected' ? result.reason : (result.value.error || 'Unknown error');
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'error-message';
+                        errorDiv.innerHTML = `⚠️ Failed to fetch data for <strong>${sourceName}</strong>: ${errorReason}`;
+                        resultsContainer.appendChild(errorDiv);
+                    }
+                });
+
+                if (hasSuccessfulData) {
+                    displayDashboard();
+                }
+
+            } catch (error) {
+                resultsContainer.innerHTML = `<div class="error-message">⚠️ An unexpected error occurred: ${error.message}</div>`;
+            } finally {
+                loader.style.display = 'none';
+            }
+        });
+
+        function displayDashboard() {
+            scorecardSection.style.display = 'grid';
+            dashboard.style.display = 'grid';
+            scorecardSection.classList.add('fade-in');
+            dashboard.classList.add('fade-in');
+            const sources = [...new Set(allArticlesData.map(a => a.sourceName))];
+            calculateAndDisplayScorecards(sources);
+            createTimelineChart(sources);
+            createDistributionPieChart(sources);
+            setupKeywordFilters(sources);
+            setupCategoryFilters(sources);
+            setupArticleFeedFilters(sources);
+            setupAIInsights(sources);
+        }
+
+        function calculateAndDisplayScorecards(sources) {
+            scorecardSection.innerHTML = '';
+            sources.forEach((source, index) => {
+                const sourceArticles = allArticlesData.filter(a => a.sourceName === source);
+                const now = new Date();
+                let countLastHour = 0, countLast6Hours = 0, countLast12Hours = 0;
+                sourceArticles.forEach(article => {
+                    const hoursAgo = (now - new Date(article.publicationTime)) / 36e5;
+                    if (hoursAgo >= 0) {
+                        if (hoursAgo < 1) countLastHour++;
+                        if (hoursAgo < 6) countLast6Hours++;
+                        if (hoursAgo < 12) countLast12Hours++;
+                    }
+                });
+                const group = document.createElement('div');
+                group.className = 'source-scorecard-group';
+                group.style.borderColor = sourceColors[index % sourceColors.length];
+                group.innerHTML = `
+                    <h2>${source}</h2>
+                    <div class="scorecard-grid">
+                        <div class="scorecard"><div class="value" style="color:${sourceColors[index % sourceColors.length]}">${countLastHour}</div><div class="label">Articles in Last Hour</div></div>
+                        <div class="scorecard"><div class="value" style="color:${sourceColors[index % sourceColors.length]}">${countLast6Hours}</div><div class="label">Articles in Last 6 Hours</div></div>
+                        <div class="scorecard"><div class="value" style="color:${sourceColors[index % sourceColors.length]}">${countLast12Hours}</div><div class="label">Articles in Last 12 Hours</div></div>
+                        <div class="scorecard"><div class="value" style="color:${sourceColors[index % sourceColors.length]}">${(countLast12Hours / 12).toFixed(1)}</div><div class="label">Avg/Hour (12hr)</div></div>
+                    </div>`;
+                scorecardSection.appendChild(group);
+            });
+        }
+
+        function createTimelineChart(sources) {
+            if (timelineChartInstance) timelineChartInstance.destroy();
+            const now = new Date();
+            const labels = Array.from({length: 24}, (_, i) => {
+                const hour = new Date(now);
+                hour.setHours(now.getHours() - (23 - i));
+                return hour.toLocaleString('en-US', { hour: 'numeric', hour12: true });
+            });
+            const datasets = sources.map((source, index) => {
+                const sourceArticles = allArticlesData.filter(a => a.sourceName === source);
+                const hoursData = Array(24).fill(0);
+                sourceArticles.forEach(article => {
+                    const hoursAgo = Math.floor((now - new Date(article.publicationTime)) / 36e5);
+                    if (hoursAgo >= 0 && hoursAgo < 24) hoursData[23 - hoursAgo]++;
+                });
+                return {
+                    label: source, data: hoursData, borderColor: sourceColors[index % sourceColors.length],
+                    backgroundColor: `${sourceColors[index % sourceColors.length]}33`, fill: true, tension: 0.4,
+                };
+            });
+            const ctx = document.getElementById('timelineChart').getContext('2d');
+            timelineChartInstance = new Chart(ctx, {
+                type: 'line', data: { labels, datasets },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    scales: {
+                        y: { beginAtZero: true, ticks: { precision: 0, color: '#9ca3af' }, grid: { color: '#374151' } },
+                        x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } }
+                    },
+                    plugins: { legend: { labels: { color: '#f9fafb' } } }
+                }
+            });
+        }
+
+        function createDistributionPieChart(sources) {
+            if (distributionPieChartInstance) distributionPieChartInstance.destroy();
+            const now = new Date();
+            const labels = [];
+            const data = [];
+            const backgroundColors = [];
+
+            sources.forEach((source, index) => {
+                const count = allArticlesData.filter(a => a.sourceName === source && (now - new Date(a.publicationTime)) / 36e5 < 24).length;
+                if (count > 0) {
+                    labels.push(source);
+                    data.push(count);
+                    backgroundColors.push(sourceColors[index % sourceColors.length]);
+                }
+            });
+
+            const ctx = document.getElementById('distributionPieChart').getContext('2d');
+            distributionPieChartInstance = new Chart(ctx, {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        label: 'Articles Published',
+                        data: data,
+                        backgroundColor: backgroundColors,
+                        borderColor: '#1f2937',
+                        borderWidth: 2,
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    plugins: { legend: { position: 'top', labels: { color: '#f9fafb' } } }
+                }
+            });
+        }
+        
+        function setupFilterButtons(containerId, sources, clickHandler) {
+            const filtersContainer = document.getElementById(containerId);
+            filtersContainer.innerHTML = '';
+            const createFilterButton = (text, sourceName, color) => {
+                const button = document.createElement('button');
+                button.className = 'filter-btn';
+                button.textContent = text;
+                button.dataset.source = sourceName;
+                button.onclick = () => {
+                    filtersContainer.querySelectorAll('.filter-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                        btn.style.backgroundColor = 'var(--border-color)';
+                        btn.style.color = 'var(--text-secondary)';
+                    });
+                    button.classList.add('active');
+                    button.style.backgroundColor = color;
+                    button.style.color = 'var(--bg-color)';
+                    clickHandler(sourceName);
+                };
+                filtersContainer.appendChild(button);
+                return button;
+            };
+            const allBtn = createFilterButton('All', 'all', '#6b7280');
+            sources.forEach((source, index) => createFilterButton(source, source, sourceColors[index % sourceColors.length]));
+            allBtn.click();
+        }
+
+        function setupKeywordFilters(sources) {
+            setupFilterButtons('keyword-filters', sources, createKeywordTable);
+        }
+
+        function setupArticleFeedFilters(sources) {
+            setupFilterButtons('article-feed-filters', sources, populateTable);
+        }
+        
+        function setupAIInsights(sources) {
+            setupFilterButtons('ai-insights-filters', sources, generateAIInsights);
+        }
+
+        function setupCategoryFilters(sources) {
+            setupFilterButtons('category-filters', sources, createCategoryAnalysis);
+        }
+
+        function simpleMarkdownToHTML(text) {
+            let html = text.trim();
+            html = html
+                .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.*?)\*/g, '<em>$1</em>');
+
+            const blocks = html.split(/\n\s*\n/);
+
+            return blocks.map(block => {
+                if (block.match(/^[\s]*[•*-]/m)) {
+                    const items = block.split('\n').map(item => {
+                        const content = item.trim().replace(/^[\s]*[•*-]\s*/, '');
+                        return `<li>${content}</li>`;
+                    }).join('');
+                    return `<ul>${items}</ul>`;
+                } else {
+                    return `<p>${block.replace(/\n/g, '<br>')}</p>`;
+                }
+            }).join('');
+        }
+
+        async function generateAIInsights(sourceFilter) {
+            const contentDiv = document.getElementById('ai-summary-content');
+            contentDiv.innerHTML = `<div class="ai-loader">✨ Generating AI summary...</div>`;
+
+            const articlesToAnalyze = sourceFilter === 'all' 
+                ? allArticlesData 
+                : allArticlesData.filter(a => a.sourceName === sourceFilter);
+
+            const titles = articlesToAnalyze.map(a => a.title).slice(0, 100);
+
+            if (titles.length === 0) {
+                contentDiv.innerHTML = `<p>No articles found to generate a summary.</p>`;
+                return;
+            }
+
+            try {
+                // This request is sent to your Google Apps Script proxy URL
+                const response = await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'summarize',
+                        titles: titles,
+                        source: sourceFilter
+                    })
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || `Server responded with status ${response.status}`);
+                }
+
+                if (result.summary) {
+                    contentDiv.innerHTML = simpleMarkdownToHTML(result.summary);
+                } else {
+                    throw new Error("No summary was returned from the server.");
+                }
+
+            } catch (error) {
+                contentDiv.innerHTML = `<p style="color: #fca5a5;">Could not generate summary: ${error.message}</p>`;
+            }
+        }
+
+        function createKeywordTable(sourceFilter) {
+            const articlesToAnalyze = sourceFilter === 'all' ? allArticlesData : allArticlesData.filter(a => a.sourceName === sourceFilter);
+            const tableBody = document.getElementById('keywordTableBody');
+            tableBody.innerHTML = '';
+
+            const stopWords = new Set(['a', 'about', 'above', 'after', 'again', 'against', 'all', 'am', 'an', 'and', 'any', 'are', 'as', 'at', 'be', 'because', 'been', 'before', 'being', 'below', 'between', 'both', 'but', 'by', 'can', 'did', 'do', 'does', 'doing', 'don', 'down', 'during', 'each', 'few', 'for', 'from', 'further', 'had', 'has', 'have', 'having', 'he', 'her', 'here', 'hers', 'herself', 'him', 'himself', 'his', 'how', 'i', 'if', 'in', 'into', 'is', 'it', 'its', 'itself', 'just', 'me', 'more', 'most', 'my', 'myself', 'no', 'nor', 'not', 'now', 'o', 'of', 'off', 'on', 'once', 'only', 'or', 'other', 'our', 'ourselves', 'out', 'over', 'own', 's', 'same', 'she', 'should', 'so', 'some', 'such', 't', 'than', 'that', 'the', 'their', 'theirs', 'them', 'themselves', 'then', 'there', 'these', 'they', 'this', 'those', 'through', 'to', 'too', 'under', 'until', 'up', 'very', 'was', 'we', 'were', 'what', 'when', 'where', 'which', 'while', 'who', 'whom', 'why', 'will', 'with', 'you', 'your', 'yours', 'yourself', 'yourselves', 'says', 'news', 'live', 'updates', 'watch', 'video']);
+            const wordCounts = {};
+            const allTitles = articlesToAnalyze.map(article => article.title).join(' ');
+            const words = allTitles.toLowerCase().match(/\b\w+\b/g)?.filter(word => !stopWords.has(word) && isNaN(word)) || [];
+            
+            words.forEach(word => { wordCounts[word] = (wordCounts[word] || 0) + 1; });
+            const wordList = Object.entries(wordCounts).sort((a, b) => b[1] - a[1]).slice(0, 100);
+
+            if (wordList.length > 0) {
+                wordList.forEach(([keyword, frequency]) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `<td>${keyword}</td><td>${frequency}</td>`;
+                    tableBody.appendChild(row);
+                });
+            }
+        }
+        
+        function createCategoryAnalysis(sourceFilter = 'all') {
+            const articlesToAnalyze = sourceFilter === 'all' ? allArticlesData : allArticlesData.filter(a => a.sourceName === sourceFilter);
+            const tableBody = document.getElementById('categoryTableBody');
+            tableBody.innerHTML = '';
+            const categoryCounts = {};
+
+            articlesToAnalyze.forEach(article => {
+                try {
+                    const url = new URL(article.url);
+                    const pathParts = url.pathname.split('/').filter(part => part && !part.endsWith('.html') && !part.endsWith('.cms') && isNaN(part));
+                    if (pathParts.length > 0) {
+                        const category = pathParts[0];
+                        const source = article.sourceName;
+                        if (!categoryCounts[source]) categoryCounts[source] = {};
+                        categoryCounts[source][category] = (categoryCounts[source][category] || 0) + 1;
+                    }
+                } catch (e) { /* ignore invalid URLs */ }
+            });
+
+            const categoryList = [];
+            for (const source in categoryCounts) {
+                for (const category in categoryCounts[source]) {
+                    categoryList.push({
+                        source: source,
+                        category: category,
+                        count: categoryCounts[source][category],
+                        color: allArticlesData.find(a => a.sourceName === source)?.sourceColor || '#ffffff'
+                    });
+                }
+            }
+
+            categoryList.sort((a, b) => b.count - a.count);
+
+            categoryList.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.category}</td>
+                    <td><span style="color: ${item.color}; font-weight: 600;">${item.source}</span></td>
+                    <td>${item.count}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        function populateTable(sourceFilter = 'all') {
+            const articlesToDisplay = sourceFilter === 'all' ? allArticlesData : allArticlesData.filter(a => a.sourceName === sourceFilter);
+            const tableBody = document.getElementById('articlesTableBody');
+            tableBody.innerHTML = '';
+            
+            articlesToDisplay.sort((a,b) => new Date(b.publicationTime) - new Date(a.publicationTime));
+            
+            for (const article of articlesToDisplay) {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><span style="color: ${article.sourceColor}; font-weight: 600;">${article.sourceName}</span></td>
+                    <td><a href="${article.url}" target="_blank" rel="noopener noreferrer">${article.title}</a></td>
+                    <td>${new Date(article.publicationTime).toLocaleString()}</td>
+                `;
+                tableBody.appendChild(row);
+            }
+        }
+    })();
+    </script>
+</body>
+</html>
