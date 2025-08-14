@@ -14,35 +14,80 @@
     <link rel="stylesheet" href="style.css">
 
     <style>
-        /* Additional styles for the iframe to fill the main content area */
+        /* This style block now includes the NEXID title animation */
         #main-content {
-            padding: 0;
-            overflow: hidden; /* Hide scrollbars on the main container */
+            /* This will vertically and horizontally center the content */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
         }
         #content-frame {
             width: 100%;
             height: 100%;
             border: none;
         }
+
+        /* Styling for the animated NEXID title */
+        .nexid-title {
+            font-size: 6rem;
+            font-weight: 700;
+            letter-spacing: 5px;
+            color: #a78bfa; /* Purple color */
+            text-align: center;
+            animation: pulseGlow 3s ease-in-out infinite alternate;
+        }
+
+        /* Styling for the bigger, spinning 'X' */
+        .nexid-title span {
+            font-size: 7.5rem; /* 25% bigger than the rest of the text */
+            display: inline-block;
+            animation: spinX 6s linear infinite;
+        }
+
+        @keyframes pulseGlow {
+            from {
+                opacity: 0.7;
+                text-shadow: 0 0 10px #a78bfa, 0 0 20px #a78bfa;
+            }
+            to {
+                opacity: 1;
+                text-shadow: 0 0 20px #a78bfa, 0 0 40px #a78bfa, 0 0 60px #c4b5fd;
+            }
+        }
+
+        @keyframes spinX {
+            from {
+                transform: rotateY(0deg);
+            }
+            to {
+                transform: rotateY(360deg);
+            }
+        }
     </style>
 </head>
 <body>
     <aside id="sidebar">
-        <h1>Dashboard</h1>
+        <h1 id="dashboard-title">Dashboard</h1>
         <nav>
             <ul>
                 <!-- Links now use standard href and a target -->
-                <li><a href="sitemap.html" class="tab-link active" target="content-frame">Sitemap Web Analysis</a></li>
-                <li><a href="youtube.html" class="tab-link" target="content-frame">YouTube</a></li>
-                <li><a href="semrush.html" class="tab-link" target="content-frame">Semrush</a></li>
-                <!-- Add other direct links here -->
+                <li><a href="sitemap.html" class="tab-link">Sitemap Web Analysis</a></li>
+                <li><a href="youtube.html" class="tab-link">YouTube</a></li>
+                <li><a href="semrush.html" class="tab-link">Semrush</a></li>
+                <li><a href="instagram.html" class="tab-link">Instagram</a></li>
+                <li><a href="facebook.html" class="tab-link">Facebook</a></li>
+                <li><a href="twitter.html" class="tab-link">Twitter</a></li>
+                <li><a href="linkedin.html" class="tab-link">LinkedIn</a></li>
+                <li><a href="comscore.html" class="tab-link">Comscore</a></li>
+                <li><a href="reddit.html" class="tab-link">Reddit</a></li>
             </ul>
         </nav>
     </aside>
 
-    <!-- The main content area now holds an iframe -->
+    <!-- The main content area now starts with the NEXID title -->
     <main id="main-content">
-        <iframe name="content-frame" id="content-frame" src="sitemap.html"></iframe>
+        <div class="nexid-title">NE<span>X</span>ID</div>
     </main>
 
     <div id="credit-footer">
@@ -50,15 +95,37 @@
     </div>
 
     <script>
-        // This simple script handles the "active" class on the sidebar links
         document.addEventListener('DOMContentLoaded', () => {
             const tabLinks = document.querySelectorAll('.tab-link');
+            const mainContent = document.getElementById('main-content');
+            const dashboardTitle = document.getElementById('dashboard-title');
             
+            // Store the initial NEXID content
+            const initialContent = mainContent.innerHTML;
+
             tabLinks.forEach(link => {
-                link.addEventListener('click', () => {
+                link.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    
+                    // Update active class on sidebar
                     tabLinks.forEach(l => l.classList.remove('active'));
                     link.classList.add('active');
+
+                    // Replace main content with an iframe for the selected tool
+                    mainContent.style.padding = '0'; // Remove padding for the iframe
+                    mainContent.innerHTML = `<iframe id="content-frame" src="${link.href}"></iframe>`;
                 });
+            });
+
+            // Make the main "Dashboard" title clickable to return home
+            dashboardTitle.style.cursor = 'pointer';
+            dashboardTitle.addEventListener('click', () => {
+                // Restore the initial NEXID title
+                mainContent.innerHTML = initialContent;
+                mainContent.style.padding = '2rem'; // Restore padding
+
+                // Deactivate all sidebar links
+                tabLinks.forEach(l => l.classList.remove('active'));
             });
         });
     </script>
