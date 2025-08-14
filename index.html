@@ -16,11 +16,11 @@
     <style>
         /* This style block now includes the NEXID title animation */
         #main-content {
-            /* This will vertically and horizontally center the content */
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 2rem;
+            perspective: 1000px; /* Adds perspective for 3D effects */
         }
         #content-frame {
             width: 100%;
@@ -35,29 +35,22 @@
             letter-spacing: 5px;
             color: #a78bfa; /* Purple color */
             text-align: center;
-            /* The animation is now a simple, subtle pulse */
-            animation: subtlePulse 4s ease-in-out infinite alternate;
+            transform-style: preserve-3d; /* Allows children to be transformed in 3D space */
+            transition: transform 0.1s linear, text-shadow 0.1s linear;
+            /* The glow and transform are now controlled by CSS variables */
+            text-shadow: var(--glow-x, 0px) var(--glow-y, 0px) 16px rgba(167, 139, 250, 0.7);
+            transform: rotateX(var(--rotate-x, 0deg)) rotateY(var(--rotate-y, 0deg));
         }
 
-        /* Styling for the bigger, spinning 'X' */
+        /* Styling for the bigger 'X' */
         .nexid-title span {
-            font-size: 7.5rem; /* 25% bigger than the rest of the text */
+            font-size: 7.5rem;
             display: inline-block;
+            /* The animation is now the simple spin again */
             animation: spinX 6s linear infinite;
         }
-
-        /* Simplified keyframes for a less "noisy" effect */
-        @keyframes subtlePulse {
-            from {
-                opacity: 0.8;
-                transform: scale(1);
-            }
-            to {
-                opacity: 1;
-                transform: scale(1.02);
-            }
-        }
-
+        
+        /* Restored the simple spin animation */
         @keyframes spinX {
             from {
                 transform: rotateY(0deg);
@@ -101,34 +94,72 @@
             const tabLinks = document.querySelectorAll('.tab-link');
             const mainContent = document.getElementById('main-content');
             const dashboardTitle = document.getElementById('dashboard-title');
+            const nexidTitle = document.querySelector('.nexid-title');
             
-            // Store the initial NEXID content
             const initialContent = mainContent.innerHTML;
 
             tabLinks.forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
-                    
-                    // Update active class on sidebar
                     tabLinks.forEach(l => l.classList.remove('active'));
                     link.classList.add('active');
-
-                    // Replace main content with an iframe for the selected tool
-                    mainContent.style.padding = '0'; // Remove padding for the iframe
+                    mainContent.style.padding = '0';
                     mainContent.innerHTML = `<iframe id="content-frame" src="${link.href}"></iframe>`;
                 });
             });
 
-            // Make the main "Dashboard" title clickable to return home
             dashboardTitle.style.cursor = 'pointer';
             dashboardTitle.addEventListener('click', () => {
-                // Restore the initial NEXID title
                 mainContent.innerHTML = initialContent;
-                mainContent.style.padding = '2rem'; // Restore padding
-
-                // Deactivate all sidebar links
+                mainContent.style.padding = '2rem';
                 tabLinks.forEach(l => l.classList.remove('active'));
+                // Re-initialize the mouse move listener for the new title
+                initNexidInteraction();
             });
+
+            // --- UPDATED CURSOR INTERACTION LOGIC ---
+            function initNexidInteraction() {
+                const titleEl = document.querySelector('.nexid-title');
+                if (!titleEl) return;
+
+                mainContent.addEventListener('mousemove', (e) => {
+                    const { clientX, clientY } = e;
+                    const { offsetWidth, offsetHeight } = mainContent;
+
+                    const centerX = offsetWidth / 2;
+                    const centerY = offsetHeight / 2;
+
+                    const moveX = (clientX - centerX) / centerX; // -1 to 1
+                    const moveY = (clientY - centerY) / centerY; // -1 to 1
+                    
+                    // --- LOGIC CHANGES ARE HERE ---
+                    let rotateX = 0;
+                    let glowY = 0;
+
+                    // Only react if the cursor is in the bottom half of the screen
+                    if (moveY > 0) {
+                        rotateX = moveY * -8; // Reduced max rotation to 8 degrees
+                        glowY = moveY * 15;   // Reduced max glow offset
+                    }
+                    
+                    const rotateY = moveX * 8;  // Reduced max rotation to 8 degrees
+                    const glowX = moveX * 15; // Reduced max glow offset
+
+                    titleEl.style.setProperty('--rotate-x', `${rotateX}deg`);
+                    titleEl.style.setProperty('--rotate-y', `${rotateY}deg`);
+                    titleEl.style.setProperty('--glow-x', `${glowX}px`);
+                    titleEl.style.setProperty('--glow-y', `${glowY}px`);
+                });
+
+                mainContent.addEventListener('mouseleave', () => {
+                     titleEl.style.setProperty('--rotate-x', `0deg`);
+                     titleEl.style.setProperty('--rotate-y', `0deg`);
+                     titleEl.style.setProperty('--glow-x', `0px`);
+                     titleEl.style.setProperty('--glow-y', `0px`);
+                });
+            }
+            
+            initNexidInteraction();
         });
     </script>
 </body>
