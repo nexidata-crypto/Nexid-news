@@ -35,7 +35,8 @@
             letter-spacing: 5px;
             color: #a78bfa; /* Purple color */
             text-align: center;
-            animation: pulseGlow 3s ease-in-out infinite alternate;
+            /* The animation is now a simple, subtle pulse */
+            animation: subtlePulse 4s ease-in-out infinite alternate;
         }
 
         /* Styling for the bigger, spinning 'X' */
@@ -45,14 +46,15 @@
             animation: spinX 6s linear infinite;
         }
 
-        @keyframes pulseGlow {
+        /* Simplified keyframes for a less "noisy" effect */
+        @keyframes subtlePulse {
             from {
-                opacity: 0.7;
-                text-shadow: 0 0 10px #a78bfa, 0 0 20px #a78bfa;
+                opacity: 0.8;
+                transform: scale(1);
             }
             to {
                 opacity: 1;
-                text-shadow: 0 0 20px #a78bfa, 0 0 40px #a78bfa, 0 0 60px #c4b5fd;
+                transform: scale(1.02);
             }
         }
 
