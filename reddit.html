@@ -140,9 +140,12 @@
 
 <script>
 (() => {
+    // URL for the Google Apps Script proxy
+    const REDDIT_API_URL = 'https://script.google.com/macros/s/AKfycbzHFkhR-WmkuziYjQpEyao5ozej9cDLhxkmONc_v_7SXpq61fv__0xBwfujgdSGzuv5/exec'; 
+
     const REDDIT_ORANGE = '#FF5700';
     let allRedditPosts = [];
-    const chartInstances = {}; // Use a single object for all charts
+    const chartInstances = {};
     
     const form = document.getElementById('redditForm');
     const input = document.getElementById('subredditInput');
@@ -178,6 +181,7 @@
 
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
+        
         loader.style.display = 'block';
         resultsContainer.innerHTML = '';
         scorecardSection.style.display = 'none';
@@ -193,10 +197,15 @@
             return;
         }
 
-        const fetchPromises = subreddits.map(sub => 
-            fetch(`https://www.reddit.com/r/${sub}/new.json?limit=100`)
-                .then(res => res.ok ? res.json() : Promise.reject(`Subreddit 'r/${sub}' not found or private.`))
-        );
+        const fetchPromises = subreddits.map(sub => {
+            const requestUrl = `${REDDIT_API_URL}?sub=${encodeURIComponent(sub)}`;
+            return fetch(requestUrl)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.error) return Promise.reject(data.error);
+                    return data;
+                });
+        });
 
         try {
             const results = await Promise.allSettled(fetchPromises);
@@ -207,23 +216,11 @@
                 const subName = subreddits[index];
                 if (result.status === 'fulfilled') {
                     hasSuccessfulData = true;
-                    const posts = result.value.data.children;
-                    const twentyFourHoursAgo = Date.now() - (24 * 60 * 60 * 1000);
-
-                    posts.forEach(({ data: post }) => {
-                        const postTime = post.created_utc * 1000;
-                        if (postTime >= twentyFourHoursAgo) {
-                            allRedditPosts.push({
-                                subreddit: post.subreddit,
-                                title: post.title,
-                                author: post.author,
-                                score: post.score,
-                                comments: post.num_comments,
-                                permalink: `https://www.reddit.com${post.permalink}`,
-                                time: new Date(postTime),
-                                type: post.post_hint || (post.is_self ? 'text' : 'link') // Determine post type
-                            });
-                        }
+                    result.value.forEach(post => {
+                         allRedditPosts.push({
+                            ...post,
+                            time: new Date(post.time)
+                         });
                     });
                 } else {
                     resultsContainer.innerHTML += `<div class="error-message">⚠️ Failed to fetch data for <strong>r/${subName}</strong>: ${result.reason}</div>`;
@@ -245,11 +242,11 @@
         
         createRedditScorecards(subreddits);
         createRedditActivityChart(subreddits);
-        createPostTypeChart(subreddits); // New chart
+        createPostTypeChart();
         
         setupFilterButtons('reddit-posts-filters', subreddits, (filter) => createRedditTopPostsTable(filter));
         setupFilterButtons('reddit-topics-filters', subreddits, (filter) => createRedditKeywordsTable(filter));
-        setupFilterButtons('reddit-users-filters', subreddits, (filter) => createActiveUserTable(filter)); // New table
+        setupFilterButtons('reddit-users-filters', subreddits, (filter) => createActiveUserTable(filter));
     }
 
     function createRedditScorecards(subreddits) {
@@ -349,7 +346,7 @@
         });
     }
 
-    function createPostTypeChart(subreddits) {
+    function createPostTypeChart() {
         if (chartInstances.postTypes) chartInstances.postTypes.destroy();
         const typeCounts = {};
         allRedditPosts.forEach(post => {
