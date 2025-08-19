@@ -3,195 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Multi-Platform Analysis Dashboard</title>
-    
-    <!-- UPDATED: Added Favicon for the browser tab -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><path d='M10 10 L90 90 M90 10 L10 90' stroke='%23a78bfa' stroke-width='18' stroke-linecap='round'/></svg>">
-
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <title>Feature Locked</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <!-- Stylesheet -->
-    <link rel="stylesheet" href="style.css">
-
-    <!-- Google Analytics -->
-    <!-- IMPORTANT: Replace G-5XCH2XQTFB with your actual Measurement ID -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-5XCH2XQTFB"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-
-      gtag('config', 'G-5XCH2XQTFB'); 
-    </script>
-
     <style>
-        /* This style block now includes the NEXID title animation */
-        #main-content {
+        :root {
+            --bg-color: #111827;
+            --card-color: #1f2937;
+            --border-color: #374151;
+            --text-primary: #f9fafb;
+            --text-secondary: #9ca3af;
+            --accent-1: #22d3ee;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
             display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
+            min-height: 100vh;
             padding: 2rem;
-            perspective: 1000px; /* Adds perspective for 3D effects */
         }
-        #content-frame {
+        .container {
             width: 100%;
-            height: 100%;
-            border: none;
+            max-width: 1400px;
+            margin: 0 auto;
         }
-
-        /* Styling for the animated NEXID title */
-        .nexid-title {
-            font-size: 6rem;
-            font-weight: 700;
-            letter-spacing: 5px;
-            color: #a78bfa; /* Purple color */
-            text-align: center;
-            transform-style: preserve-3d; /* Allows children to be transformed in 3D space */
-            transition: transform 0.1s linear, text-shadow 0.1s linear;
-            /* The glow and transform are now controlled by CSS variables */
-            text-shadow: var(--glow-x, 0px) var(--glow-y, 0px) 16px rgba(167, 139, 250, 0.7);
-            transform: rotateX(var(--rotate-x, 0deg)) rotateY(var(--rotate-y, 0deg));
+        .locked-container {
+            background-color: var(--card-color);
+            border: 1px solid var(--border-color);
+            border-radius: 0.75rem;
+            padding: 4rem;
             display: flex;
-            align-items: center;
+            flex-direction: column;
             justify-content: center;
+            align-items: center;
+            text-align: center;
         }
-
-        /* Styling for the new SVG 'X' logo */
-        .nexid-logo-x {
-            width: 7.5rem; /* Corresponds to the old font-size */
-            height: 7.5rem;
-            display: inline-block;
-            animation: spinX 6s linear infinite;
-            fill: #a78bfa; /* Purple color for the logo */
-            margin: 0 -15px; /* Adjust spacing to fit with text */
+        .locked-container .lock-icon {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 1.5rem;
+            color: var(--text-secondary);
         }
-        
-        /* Restored the simple spin animation */
-        @keyframes spinX {
-            from {
-                transform: rotateY(0deg);
-            }
-            to {
-                transform: rotateY(360deg);
-            }
+        .locked-container h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        .locked-container p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+        }
+        .locked-container .mail-link {
+            padding: 12px 24px;
+            background-color: var(--accent-1);
+            color: var(--bg-color);
+            text-decoration: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        .locked-container .mail-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(34, 211, 238, 0.2);
         }
     </style>
 </head>
 <body>
-    <aside id="sidebar">
-        <h1 id="dashboard-title">Dashboard</h1>
-        <nav>
-            <ul>
-                <!-- UPDATED: Sidebar links reordered and renamed -->
-                <li><a href="sitemap.html" class="tab-link">ARTICLES</a></li>
-                <li><a href="youtube.html" class="tab-link">YOUTUBE</a></li>
-                <li><a href="reddit.html" class="tab-link">REDDIT</a></li>
-                <li><a href="semrush.html" class="tab-link">SEMRUSH</a></li>
-                <li><a href="instagram.html" class="tab-link">INSTAGRAM</a></li>
-                <li><a href="facebook.html" class="tab-link">FACEBOOK</a></li>
-                <li><a href="twitter.html" class="tab-link">TWITTER</a></li>
-                <li><a href="linkedin.html" class="tab-link">LINKEDIN</a></li>
-                <li><a href="comscore.html" class="tab-link">COMSCORE</a></li>
-            </ul>
-        </nav>
-    </aside>
-
-    <!-- The main content area now starts with the NEXID title -->
-    <main id="main-content">
-        <div class="nexid-title">
-            NE
-            <!-- UPDATED: Replaced span with SVG logo -->
-            <svg class="nexid-logo-x" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-                <path d="M10 10 L90 90 M90 10 L10 90" stroke="currentColor" stroke-width="18" stroke-linecap="round"/>
+    <div class="container">
+        <div class="locked-container">
+            <svg class="lock-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75A1.5 1.5 0 005.25 12v7.5a1.5 1.5 0 001.5 1.5h8.25a1.5 1.5 0 001.5-1.5v-7.5a1.5 1.5 0 00-1.5-1.5H16.5z" />
             </svg>
-            ID
+            <h1>Paid Service Page</h1>
+            <p>This feature is locked. Please mail here for access.</p>
+            <a href="mailto:nexidata@gmail.com" class="mail-link">nexidata@gmail.com</a>
         </div>
-    </main>
-
-    <div id="credit-footer">
-        By Nexid
     </div>
-
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const tabLinks = document.querySelectorAll('.tab-link');
-            const mainContent = document.getElementById('main-content');
-            const dashboardTitle = document.getElementById('dashboard-title');
-            
-            const initialContent = mainContent.innerHTML;
-
-            tabLinks.forEach(link => {
-                link.addEventListener('click', (e) => {
-                    e.preventDefault();
-                    tabLinks.forEach(l => l.classList.remove('active'));
-                    link.classList.add('active');
-                    mainContent.style.padding = '0';
-                    mainContent.innerHTML = `<iframe id="content-frame" src="${link.href}"></iframe>`;
-
-                    // --- ADDED THIS LINE FOR ANALYTICS ---
-                    // This sends a page_view event to Google Analytics with the path of the tool
-                    gtag('event', 'page_view', {
-                        page_path: link.getAttribute('href')
-                    });
-                });
-            });
-
-            dashboardTitle.style.cursor = 'pointer';
-            dashboardTitle.addEventListener('click', () => {
-                mainContent.innerHTML = initialContent;
-                mainContent.style.padding = '2rem';
-                tabLinks.forEach(l => l.classList.remove('active'));
-                initNexidInteraction();
-
-                // --- ADDED THIS LINE FOR ANALYTICS ---
-                // This sends a page_view event when returning to the home screen
-                gtag('event', 'page_view', {
-                    page_path: '/home'
-                });
-            });
-
-            function initNexidInteraction() {
-                const titleEl = document.querySelector('.nexid-title');
-                if (!titleEl) return;
-
-                mainContent.addEventListener('mousemove', (e) => {
-                    const { clientX, clientY } = e;
-                    const { offsetWidth, offsetHeight } = mainContent;
-                    const centerX = offsetWidth / 2;
-                    const centerY = offsetHeight / 2;
-                    const moveX = (clientX - centerX) / centerX;
-                    const moveY = (clientY - centerY) / centerY;
-                    
-                    let rotateX = 0;
-                    let glowY = 0;
-
-                    if (moveY > 0) {
-                        rotateX = moveY * -8;
-                        glowY = moveY * 15;
-                    }
-                    
-                    const rotateY = moveX * 8;
-                    const glowX = moveX * 15;
-
-                    titleEl.style.setProperty('--rotate-x', `${rotateX}deg`);
-                    titleEl.style.setProperty('--rotate-y', `${rotateY}deg`);
-                    titleEl.style.setProperty('--glow-x', `${glowX}px`);
-                    titleEl.style.setProperty('--glow-y', `${glowY}px`);
-                });
-
-                mainContent.addEventListener('mouseleave', () => {
-                     titleEl.style.setProperty('--rotate-x', `0deg`);
-                     titleEl.style.setProperty('--rotate-y', `0deg`);
-                     titleEl.style.setProperty('--glow-x', `0px`);
-                     titleEl.style.setProperty('--glow-y', `0px`);
-                });
-            }
-            
-            initNexidInteraction();
-        });
-    </script>
 </body>
 </html>
