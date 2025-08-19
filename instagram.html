@@ -3,15 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Instagram Analysis Dashboard</title>
-    
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <title>Feature Locked</title>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
-
     <style>
         :root {
             --bg-color: #111827;
@@ -19,417 +12,77 @@
             --border-color: #374151;
             --text-primary: #f9fafb;
             --text-secondary: #9ca3af;
-            --instagram-accent: #E4405F;
+            --accent-1: #22d3ee;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html { scroll-behavior: smooth; }
         body {
             font-family: 'Inter', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-primary);
-        }
-        
-        main {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
             padding: 2rem;
         }
-        
-        .container { 
-            width: 100%; 
-            max-width: 1200px; 
-            margin: 0 auto; 
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
         }
-        
-        .card {
-            background-color: var(--card-color); 
+        .locked-container {
+            background-color: var(--card-color);
+            border: 1px solid var(--border-color);
             border-radius: 0.75rem;
-            padding: 1.5rem; 
-            border: 1px solid var(--border-color); 
+            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+        .locked-container .lock-icon {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 1.5rem;
+            color: var(--text-secondary);
+        }
+        .locked-container h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 0.5rem;
+        }
+        .locked-container p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
             margin-bottom: 2rem;
         }
-        
-        .form-card { 
-            text-align: center; 
-            border: none; 
-            background-color: transparent; 
-            padding-top: 0; 
-        }
-        .form-card h1 { font-size: 2.5rem; font-weight: 700; }
-        .form-card p { margin-top: 0.5rem; color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 1.5rem; }
-        
-        .url-input-group { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
-        .url-input {
-            flex-grow: 1; 
-            padding: 14px 18px; 
-            font-size: 1rem; 
-            background-color: var(--card-color);
-            color: var(--text-primary); 
-            border: 1px solid var(--border-color); 
-            border-radius: 0.5rem; 
+        .locked-container .mail-link {
+            padding: 12px 24px;
+            background-color: var(--accent-1);
+            color: var(--bg-color);
+            text-decoration: none;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            font-size: 1rem;
             transition: all 0.2s;
         }
-        .url-input:focus { 
-            outline: none; 
-            border-color: var(--instagram-accent); 
-            box-shadow: 0 0 0 4px rgba(228, 64, 95, 0.2); 
-        }
-        
-        .add-url-btn {
-            flex-shrink: 0; 
-            background-color: var(--border-color); 
-            color: var(--text-primary); 
-            font-weight: 600;
-            padding: 0 1.5rem; 
-            border: none; 
-            border-radius: 0.5rem; 
-            cursor: pointer; 
-            transition: background-color 0.2s;
-        }
-        .add-url-btn:hover { background-color: #4b5563; }
-        
-        .url-tags-container { 
-            display: flex; 
-            flex-wrap: wrap; 
-            gap: 0.5rem; 
-            min-height: 2.5rem; 
-            justify-content: center; 
-            margin-bottom: 1.5rem; 
-        }
-        .url-tag {
-            display: flex; 
-            align-items: center; 
-            background-color: var(--bg-color); 
-            border: 1px solid var(--border-color);
-            padding: 0.5rem 0.75rem; 
-            border-radius: 2rem; 
-            font-size: 0.9rem;
-        }
-        .url-tag .remove-tag { 
-            margin-left: 0.5rem; 
-            background: none; 
-            border: none; 
-            color: var(--text-secondary); 
-            cursor: pointer; 
-            font-size: 1rem; 
-        }
-        
-        #analyzeInstagramBtn {
-            width: 100%; 
-            color: var(--text-primary); 
-            font-size: 1rem; 
-            font-weight: 600;
-            padding: 14px 20px; 
-            border: none; 
-            border-radius: 0.5rem; 
-            cursor: pointer; 
-            transition: all 0.2s;
-            background: linear-gradient(45deg, #f09433 0%,#e6683c 25%,#dc2743 50%,#cc2366 75%,#bc1888 100%); 
-        }
-        #analyzeInstagramBtn:hover { 
-            transform: translateY(-2px); 
-            box-shadow: 0 4px 20px rgba(220, 39, 67, 0.3); 
-        }
-
-        #dashboard { display: none; gap: 2rem; }
-        #instagram-dashboard-grid { 
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); 
-        }
-
-        #instagram-scorecard-section { 
-            display: none; 
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); 
-            gap: 1.5rem; 
-            margin-bottom: 2rem; 
-        }
-        .scorecard { 
-            background-color: var(--bg-color); 
-            border: 1px solid var(--border-color); 
-            border-radius: 0.5rem; 
-            padding: 1rem; 
-            text-align: center; 
-        }
-        .scorecard .value { font-size: 2rem; font-weight: 700; }
-        .scorecard .label { font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.25rem; }
-
-        .viz-card h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; }
-        .chart-container { position: relative; height: 350px; width: 100%; }
-        .table-wrapper { max-height: 400px; overflow-y: auto; }
-        
-        table { width: 100%; border-collapse: collapse; }
-        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
-        thead th { background-color: #374151; position: sticky; top: 0; font-weight: 600; }
-        td a { color: var(--text-primary); text-decoration: none; }
-        td a:hover { text-decoration: underline; }
-
-        #instagram-loader {
-            display: none; margin: 3rem auto 0; width: 48px; height: 48px;
-            border: 5px solid var(--border-color); border-radius: 50%; 
-            animation: rotation 1s linear infinite;
-            border-bottom-color: var(--instagram-accent);
-        }
-        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-
-        .error-message { 
-            text-align: center; 
-            padding: 1rem; 
-            background-color: #991b1b; 
-            color: #fecaca; 
-            border: 1px solid #ef4444; 
-            border-radius: 0.5rem; 
-            margin-top: 1rem; 
+        .locked-container .mail-link:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(34, 211, 238, 0.2);
         }
     </style>
 </head>
 <body>
-    <main>
-        <div class="container">
-            <section class="card form-card">
-                <h1>Comparative Instagram Analysis</h1>
-                <p>Enter Instagram usernames for a recent performance overview.</p>
-                <form id="instagramForm">
-                    <div class="url-input-group">
-                        <input type="text" id="instagramUrlInput" class="url-input" placeholder="e.g., nasa, natgeo">
-                        <button type="button" id="addInstagramUrlBtn" class="add-url-btn">Add</button>
-                    </div>
-                    <div id="instagram-url-tags-container" class="url-tags-container"></div>
-                    <button type="submit" id="analyzeInstagramBtn" class="analyze-btn">Analyze Users</button>
-                </form>
-            </section>
-
-            <div id="instagram-loader" class="loader"></div>
-            <div id="instagram-results-container"></div>
-            
-            <div id="dashboard">
-                <section id="instagram-scorecard-section" class="scorecard-section"></section>
-
-                <div id="instagram-dashboard-grid" class="dashboard-grid">
-                    <div class="card viz-card">
-                        <h2>Top Performing Posts (by Likes)</h2>
-                        <div class="table-wrapper">
-                            <table>
-                                <thead>
-                                    <tr>
-                                        <th>User</th>
-                                        <th>Post Preview</th>
-                                        <th>Likes</th>
-                                        <th>Comments</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="instagramTopPostsBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="card viz-card">
-                        <h2>Post Frequency</h2>
-                        <div class="chart-container">
-                            <canvas id="instagramFrequencyChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </div>
+    <div class="container">
+        <div class="locked-container">
+            <svg class="lock-icon" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75A1.5 1.5 0 005.25 12v7.5a1.5 1.5 0 001.5 1.5h8.25a1.5 1.5 0 001.5-1.5v-7.5a1.5 1.5 0 00-1.5-1.5H16.5z" />
+            </svg>
+            <h1>Paid Service Page</h1>
+            <p>This feature is locked. Please mail here for access.</p>
+            <a href="mailto:nexidata@gmail.com" class="mail-link">nexidata@gmail.com</a>
         </div>
-    </main>
-
-    <script>
-    document.addEventListener('DOMContentLoaded', () => {
-
-        // --- GLOBAL CONFIG ---
-        const INSTAGRAM_API_URL = 'https://script.google.com/macros/s/AKfycbzNDRymErgXfNYGH4jSifxunvv8NLnqkNnfjKxnDemn1zvpdYbnknoKRSi1Eb-IGanS/exec'; 
-
-        let chartInstances = {};
-
-        // --- CORE UI LOGIC ---
-        function setupTagInput(inputId, buttonId, containerId) {
-            const input = document.getElementById(inputId);
-            const button = document.getElementById(buttonId);
-            const container = document.getElementById(containerId);
-            const addTag = (value) => {
-                if (!value) return;
-                const tag = document.createElement('div');
-                tag.className = 'url-tag';
-                tag.textContent = value;
-                const removeBtn = document.createElement('button');
-                removeBtn.className = 'remove-tag';
-                removeBtn.innerHTML = '&times;';
-                removeBtn.onclick = () => tag.remove();
-                tag.appendChild(removeBtn);
-                container.appendChild(tag);
-                input.value = '';
-            };
-            button.addEventListener('click', () => addTag(input.value.trim()));
-            input.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    e.preventDefault();
-                    addTag(input.value.trim());
-                }
-            });
-        }
-        
-        setupTagInput('instagramUrlInput', 'addInstagramUrlBtn', 'instagram-url-tags-container');
-
-        function destroyAllCharts() {
-            Object.values(chartInstances).forEach(chart => chart?.destroy());
-            chartInstances = {};
-        }
-
-        // --- INSTAGRAM ANALYSIS LOGIC ---
-        const instagramForm = document.getElementById('instagramForm');
-        instagramForm.addEventListener('submit', async (event) => {
-            event.preventDefault();
-            const loader = document.getElementById('instagram-loader');
-            const resultsContainer = document.getElementById('instagram-results-container');
-            const dashboard = document.getElementById('dashboard');
-
-            loader.style.display = 'block';
-            resultsContainer.innerHTML = '';
-            dashboard.style.display = 'none';
-            destroyAllCharts();
-
-            const usernames = Array.from(document.querySelectorAll('#instagram-url-tags-container .url-tag')).map(tag => tag.firstChild.textContent.trim());
-
-            if (usernames.length === 0) {
-                resultsContainer.innerHTML = `<div class="error-message">Please add at least one Instagram username.</div>`;
-                loader.style.display = 'none';
-                return;
-            }
-
-            const requestUrl = `${INSTAGRAM_API_URL}?usernames=${encodeURIComponent(usernames.join(','))}`;
-
-            try {
-                const response = await fetch(requestUrl);
-                const result = await response.json();
-
-                resultsContainer.innerHTML = ''; // Clear previous errors
-                if (result.errors && result.errors.length > 0) {
-                    result.errors.forEach(err => {
-                        resultsContainer.innerHTML += `<div class="error-message">⚠️ Error for <strong>${err.user}</strong>: ${err.error}</div>`;
-                    });
-                }
-
-                if (result.data && result.data.length > 0) {
-                    dashboard.style.display = 'block';
-                    displayInstagramDashboard(result.data);
-                } else if (!resultsContainer.innerHTML) { 
-                    resultsContainer.innerHTML = `<div class="error-message">No recent posts found for the provided users.</div>`;
-                }
-
-            } catch (error) {
-                resultsContainer.innerHTML = `<div class="error-message">⚠️ A critical error occurred: ${error.message}</div>`;
-            } finally {
-                loader.style.display = 'none';
-            }
-        });
-
-        function displayInstagramDashboard(posts) {
-            document.getElementById('instagram-scorecard-section').style.display = 'grid';
-            document.getElementById('instagram-dashboard-grid').style.display = 'grid';
-            
-            updateInstagramScorecards(posts);
-            updateInstagramTopPosts(posts);
-            updateInstagramFrequencyChart(posts);
-        }
-
-        function updateInstagramScorecards(posts) {
-            const section = document.getElementById('instagram-scorecard-section');
-            const totalPosts = posts.length;
-            const totalLikes = posts.reduce((sum, post) => sum + post.likes, 0);
-            const totalComments = posts.reduce((sum, post) => sum + post.comments, 0);
-            const avgLikes = totalPosts > 0 ? (totalLikes / totalPosts).toFixed(0) : 0;
-
-            section.innerHTML = `
-                <div class="scorecard">
-                    <div class="value" style="color:var(--instagram-accent)">${totalPosts.toLocaleString()}</div>
-                    <div class="label">Total Posts Fetched</div>
-                </div>
-                <div class="scorecard">
-                    <div class="value" style="color:var(--instagram-accent)">${totalLikes.toLocaleString()}</div>
-                    <div class="label">Total Likes</div>
-                </div>
-                <div class="scorecard">
-                    <div class="value" style="color:var(--instagram-accent)">${totalComments.toLocaleString()}</div>
-                    <div class="label">Total Comments</div>
-                </div>
-                <div class="scorecard">
-                    <div class="value" style="color:var(--instagram-accent)">${avgLikes.toLocaleString()}</div>
-                    <div class="label">Avg. Likes per Post</div>
-                </div>
-            `;
-        }
-
-        function updateInstagramTopPosts(posts) {
-            const sortedPosts = [...posts].sort((a, b) => b.likes - a.likes).slice(0, 50);
-            const tableBody = document.getElementById('instagramTopPostsBody');
-            tableBody.innerHTML = '';
-
-            sortedPosts.forEach(post => {
-                tableBody.innerHTML += `
-                    <tr>
-                        <td><strong>@${post.username}</strong></td>
-                        <td><a href="${post.postUrl}" target="_blank" rel="noopener noreferrer">${post.title || '<em>No caption</em>'}</a></td>
-                        <td>${post.likes.toLocaleString()}</td>
-                        <td>${post.comments.toLocaleString()}</td>
-                    </tr>
-                `;
-            });
-        }
-        
-        function updateInstagramFrequencyChart(posts) {
-            if (chartInstances.instaFreq) chartInstances.instaFreq.destroy();
-
-            const postCountsByDay = {};
-             posts.forEach(post => {
-                const day = new Date(post.publishedTime).toISOString().split('T')[0];
-                postCountsByDay[day] = (postCountsByDay[day] || 0) + 1;
-            });
-
-            const sortedDays = Object.keys(postCountsByDay).sort();
-            const labels = sortedDays;
-            const data = sortedDays.map(day => postCountsByDay[day]);
-
-            const ctx = document.getElementById('instagramFrequencyChart').getContext('2d');
-            chartInstances.instaFreq = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: labels,
-                    datasets: [{
-                        label: 'Posts per Day',
-                        data: data,
-                        backgroundColor: 'rgba(228, 64, 95, 0.5)',
-                        borderColor: 'rgba(228, 64, 95, 1)',
-                        borderWidth: 1
-                    }]
-                },
-                options: {
-                    responsive: true, 
-                    maintainAspectRatio: false,
-                    scales: {
-                        x: { 
-                            type: 'time', 
-                            time: { unit: 'day', tooltipFormat: 'MMM d, yyyy' }, 
-                            ticks: { color: '#9ca3af' },
-                            grid: { color: 'rgba(156, 163, 175, 0.1)' }
-                        },
-                        y: { 
-                            beginAtZero: true, 
-                            ticks: { precision: 0, color: '#9ca3af' },
-                            grid: { color: 'rgba(156, 163, 175, 0.1)' }
-                        }
-                    },
-                    plugins: { 
-                        legend: { display: false },
-                        tooltip: {
-                            callbacks: {
-                                title: function(context) {
-                                    return new Date(context[0].parsed.x).toLocaleDateString('en-US', { dateStyle: 'medium' });
-                                }
-                            }
-                        }
-                    }
-                }
-            });
-        }
-    });
-    </script>
+    </div>
 </body>
 </html>
