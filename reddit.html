@@ -1,16 +1,400 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reddit Analysis</title>
+    <!-- NOTE: The main dashboard's CSS file is expected to be linked here -->
+    <!-- For standalone testing, you would copy the full <style> block from the main file -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+        :root {
+            --bg-color: #111827; --card-color: #1f2937; --border-color: #374151;
+            --text-primary: #f9fafb; --text-secondary: #9ca3af; --reddit-accent: #FF5700;
+        }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-primary); padding: 2rem; }
+        .container { width: 100%; max-width: 1400px; margin: 0 auto; }
+        .card { background-color: var(--card-color); border-radius: 0.75rem; padding: 1.5rem; border: 1px solid var(--border-color); margin-bottom: 2rem; }
+        .form-card { text-align: center; border: none; background-color: transparent; padding-top: 0; }
+        .form-card h1 { font-size: 2.5rem; font-weight: 700; }
+        .form-card p { margin-top: 0.5rem; color: var(--text-secondary); font-size: 1.1rem; margin-bottom: 1.5rem; }
+        .url-input-group { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+        .url-input { flex-grow: 1; padding: 14px 18px; font-size: 1rem; background-color: var(--card-color); color: var(--text-primary); border: 1px solid var(--border-color); border-radius: 0.5rem; }
+        .add-url-btn { flex-shrink: 0; background-color: var(--border-color); color: var(--text-primary); font-weight: 600; padding: 0 1.5rem; border: none; border-radius: 0.5rem; cursor: pointer; }
+        .url-tags-container { display: flex; flex-wrap: wrap; gap: 0.5rem; min-height: 2.5rem; justify-content: center; margin-bottom: 1.5rem; }
+        .url-tag { display: flex; align-items: center; background-color: var(--bg-color); border: 1px solid var(--border-color); padding: 0.5rem 0.75rem; border-radius: 2rem; font-size: 0.9rem; }
+        .url-tag .remove-tag { margin-left: 0.5rem; background: none; border: none; color: var(--text-secondary); cursor: pointer; font-size: 1rem; }
+        .analyze-btn { width: 100%; color: var(--bg-color); font-size: 1rem; font-weight: 600; padding: 14px 20px; border: none; border-radius: 0.5rem; cursor: pointer; background-color: var(--reddit-accent); }
+        .scorecard-section { display: none; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 1.5rem; margin-bottom: 2rem; }
+        .source-scorecard-group { border-left: 4px solid; padding-left: 1.5rem; }
+        .source-scorecard-group h2 { font-size: 1.25rem; margin-bottom: 1rem; font-weight: 600; }
+        .scorecard-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; }
+        .scorecard { background-color: var(--bg-color); border: 1px solid var(--border-color); border-radius: 0.5rem; padding: 1rem; text-align: center; }
+        .scorecard .value { font-size: 2rem; font-weight: 700; }
+        .scorecard .label { font-size: 0.9rem; color: var(--text-secondary); margin-top: 0.25rem; }
+        .dashboard-grid { display: none; grid-template-columns: 1fr 1fr; grid-template-areas: 'chart chart' 'topposts keywords' 'users posttypes'; gap: 2rem; }
+        .viz-card h2 { font-size: 1.25rem; font-weight: 600; margin-bottom: 1.5rem; }
+        .chart-container { position: relative; height: 350px; width: 100%; }
+        .table-wrapper { max-height: 400px; overflow-y: auto; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 12px 15px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        thead th { background-color: #374151; position: sticky; top: 0; font-weight: 600; }
+        td a { color: var(--text-primary); text-decoration: none; }
+        .loader { display: none; margin: 3rem auto 0; width: 48px; height: 48px; border: 5px solid var(--border-color); border-radius: 50%; animation: rotation 1s linear infinite; border-bottom-color: var(--reddit-accent); }
+        @keyframes rotation { to { transform: rotate(360deg); } }
+        .error-message { text-align: center; padding: 1rem; background-color: #991b1b; color: #fecaca; border: 1px solid #ef4444; border-radius: 0.5rem; font-weight: 500; margin-top: 2rem; }
+        .filters-container { display: flex; flex-wrap: nowrap; gap: 0.5rem; margin-bottom: 1.5rem; overflow-x: auto; padding-bottom: 10px; }
+        .filter-btn { background-color: var(--border-color); color: var(--text-secondary); border: none; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.9rem; cursor: pointer; white-space: nowrap; }
+        .filter-btn.active { color: #fff; font-weight: 600; }
+    </style>
+</head>
+<body>
+
 <div class="container">
-    <div class="card paid-feature-container">
-        <div class="blurred-content">
-            <h1>Reddit Analysis</h1>
-            <div class="placeholder-grid">
-                <div class="chart-container"></div>
-                <div class="chart-container"></div>
+    <section class="card form-card">
+        <h1>Comparative Reddit Analysis</h1>
+        <p>Enter subreddit names below for a 24-hour competitive overview.</p>
+        <form id="redditForm">
+            <div class="url-input-group">
+                <input type="text" id="subredditInput" class="url-input" placeholder="e.g., technology, worldnews">
+                <button type="button" id="addSubredditBtn" class="add-url-btn">Add</button>
+            </div>
+            <div id="subreddit-tags-container" class="url-tags-container"></div>
+            <button type="submit" id="analyzeRedditBtn" class="analyze-btn">Analyze Subreddits</button>
+        </form>
+    </section>
+
+    <div id="reddit-loader" class="loader"></div>
+    <div id="reddit-results-container"></div>
+
+    <section id="reddit-scorecard-section" class="scorecard-section"></section>
+
+    <div id="reddit-dashboard-grid" class="dashboard-grid">
+        <div class="card viz-card" style="grid-area: chart;">
+            <h2>Hourly Upvote Activity (24h)</h2>
+            <div class="chart-container">
+                <canvas id="redditActivityChart"></canvas>
             </div>
         </div>
-        <div class="paid-feature-overlay">
-            <h2>Paid Feature</h2>
-            <p>Please mail here for access</p>
-            <a href="mailto:nexidata@gmail.com" class="mail-link">nexidata@gmail.com</a>
+
+        <div class="card viz-card" style="grid-area: topposts;">
+            <h2>Top Posts by Upvotes (24h)</h2>
+            <div id="reddit-posts-filters" class="filters-container"></div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Subreddit</th>
+                            <th>Post Title</th>
+                            <th>Upvotes</th>
+                            <th>Comments</th>
+                        </tr>
+                    </thead>
+                    <tbody id="redditTopPostsBody"></tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div class="card viz-card" style="grid-area: keywords;">
+            <h2>Trending Topics from Titles (24h)</h2>
+            <div id="reddit-topics-filters" class="filters-container"></div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Keyword</th>
+                            <th>Frequency</th>
+                        </tr>
+                    </thead>
+                    <tbody id="redditKeywordsBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card viz-card" style="grid-area: users;">
+            <h2>Active User Leaderboard (by Upvotes)</h2>
+            <div id="reddit-users-filters" class="filters-container"></div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>User</th>
+                            <th>Total Upvotes</th>
+                            <th>Posts</th>
+                        </tr>
+                    </thead>
+                    <tbody id="redditUsersBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="card viz-card" style="grid-area: posttypes;">
+            <h2>Post Type Distribution (24h)</h2>
+            <div class="chart-container">
+                <canvas id="redditPostTypeChart"></canvas>
+            </div>
         </div>
     </div>
 </div>
+
+<script>
+(() => {
+    const REDDIT_ORANGE = '#FF5700';
+    let allRedditPosts = [];
+    const chartInstances = {}; // Use a single object for all charts
+    
+    const form = document.getElementById('redditForm');
+    const input = document.getElementById('subredditInput');
+    const addBtn = document.getElementById('addSubredditBtn');
+    const tagsContainer = document.getElementById('subreddit-tags-container');
+    const loader = document.getElementById('reddit-loader');
+    const resultsContainer = document.getElementById('reddit-results-container');
+    const scorecardSection = document.getElementById('reddit-scorecard-section');
+    const dashboardGrid = document.getElementById('reddit-dashboard-grid');
+
+    const addTag = (value) => {
+        let subreddit = value.trim().toLowerCase().replace('r/', '');
+        if (!subreddit) return;
+        const tag = document.createElement('div');
+        tag.className = 'url-tag';
+        tag.textContent = `r/${subreddit}`;
+        const removeBtn = document.createElement('button');
+        removeBtn.className = 'remove-tag';
+        removeBtn.innerHTML = '&times;';
+        removeBtn.onclick = () => tag.remove();
+        tag.appendChild(removeBtn);
+        tagsContainer.appendChild(tag);
+        input.value = '';
+    };
+
+    addBtn.addEventListener('click', () => addTag(input.value));
+    input.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            addTag(input.value);
+        }
+    });
+
+    form.addEventListener('submit', async (event) => {
+        event.preventDefault();
+        loader.style.display = 'block';
+        resultsContainer.innerHTML = '';
+        scorecardSection.style.display = 'none';
+        dashboardGrid.style.display = 'none';
+        Object.values(chartInstances).forEach(chart => chart?.destroy());
+
+        const subreddits = Array.from(tagsContainer.querySelectorAll('.url-tag'))
+            .map(tag => tag.firstChild.textContent.trim().replace('r/', ''));
+
+        if (subreddits.length === 0) {
+            resultsContainer.innerHTML = `<div class="error-message">Please add at least one subreddit.</div>`;
+            loader.style.display = 'none';
+            return;
+        }
+
+        const fetchPromises = subreddits.map(sub => 
+            fetch(`https://www.reddit.com/r/${sub}/new.json?limit=100`)
+                .then(res => res.ok ? res.json() : Promise.reject(`Subreddit 'r/${sub}' not found or private.`))
+        );
+
+        try {
+            const results = await Promise.allSettled(fetchPromises);
+            allRedditPosts = [];
+            let hasSuccessfulData = false;
+
+            results.forEach((result, index) => {
+                const subName = subreddits[index];
+                if (result.status === 'fulfilled') {
+                    hasSuccessfulData = true;
+                    const posts = result.value.data.children;
+                    const twentyFourHoursAgo = Date.now() - (24 * 60 * 60 * 1000);
+
+                    posts.forEach(({ data: post }) => {
+                        const postTime = post.created_utc * 1000;
+                        if (postTime >= twentyFourHoursAgo) {
+                            allRedditPosts.push({
+                                subreddit: post.subreddit,
+                                title: post.title,
+                                author: post.author,
+                                score: post.score,
+                                comments: post.num_comments,
+                                permalink: `https://www.reddit.com${post.permalink}`,
+                                time: new Date(postTime),
+                                type: post.post_hint || (post.is_self ? 'text' : 'link') // Determine post type
+                            });
+                        }
+                    });
+                } else {
+                    resultsContainer.innerHTML += `<div class="error-message">⚠️ Failed to fetch data for <strong>r/${subName}</strong>: ${result.reason}</div>`;
+                }
+            });
+
+            if (hasSuccessfulData) displayRedditDashboard();
+        } catch (error) {
+            resultsContainer.innerHTML = `<div class="error-message">⚠️ An unexpected error occurred: ${error.message}</div>`;
+        } finally {
+            loader.style.display = 'none';
+        }
+    });
+
+    function displayRedditDashboard() {
+        scorecardSection.style.display = 'grid';
+        dashboardGrid.style.display = 'grid';
+        const subreddits = [...new Set(allRedditPosts.map(p => p.subreddit))];
+        
+        createRedditScorecards(subreddits);
+        createRedditActivityChart(subreddits);
+        createPostTypeChart(subreddits); // New chart
+        
+        setupFilterButtons('reddit-posts-filters', subreddits, (filter) => createRedditTopPostsTable(filter));
+        setupFilterButtons('reddit-topics-filters', subreddits, (filter) => createRedditKeywordsTable(filter));
+        setupFilterButtons('reddit-users-filters', subreddits, (filter) => createActiveUserTable(filter)); // New table
+    }
+
+    function createRedditScorecards(subreddits) {
+        scorecardSection.innerHTML = '';
+        subreddits.forEach(sub => {
+            const subPosts = allRedditPosts.filter(p => p.subreddit === sub);
+            if (subPosts.length === 0) return;
+            const totalPosts = subPosts.length;
+            const totalUpvotes = subPosts.reduce((sum, p) => sum + p.score, 0);
+            const totalComments = subPosts.reduce((sum, p) => sum + p.comments, 0);
+            const avgUpvotes = totalPosts > 0 ? (totalUpvotes / totalPosts).toFixed(0) : 0;
+            const group = document.createElement('div');
+            group.className = 'source-scorecard-group';
+            group.style.borderColor = REDDIT_ORANGE;
+            group.innerHTML = `
+                <h2>r/${sub}</h2>
+                <div class="scorecard-grid">
+                    <div class="scorecard"><div class="value" style="color:${REDDIT_ORANGE}">${totalPosts.toLocaleString()}</div><div class="label">Posts (24h)</div></div>
+                    <div class="scorecard"><div class="value" style="color:${REDDIT_ORANGE}">${totalUpvotes.toLocaleString()}</div><div class="label">Total Upvotes</div></div>
+                    <div class="scorecard"><div class="value" style="color:${REDDIT_ORANGE}">${totalComments.toLocaleString()}</div><div class="label">Total Comments</div></div>
+                    <div class="scorecard"><div class="value" style="color:${REDDIT_ORANGE}">${avgUpvotes.toLocaleString()}</div><div class="label">Avg. Upvotes</div></div>
+                </div>`;
+            scorecardSection.appendChild(group);
+        });
+    }
+
+    function createRedditTopPostsTable(filter) {
+        const postsToDisplay = (filter === 'all' ? allRedditPosts : allRedditPosts.filter(p => p.subreddit === filter));
+        const sortedPosts = [...postsToDisplay].sort((a, b) => b.score - a.score);
+        const tableBody = document.getElementById('redditTopPostsBody');
+        tableBody.innerHTML = '';
+        sortedPosts.slice(0, 100).forEach(post => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>r/${post.subreddit}</td>
+                <td><a href="${post.permalink}" target="_blank" rel="noopener noreferrer">${post.title}</a></td>
+                <td>${post.score.toLocaleString()}</td>
+                <td>${post.comments.toLocaleString()}</td>`;
+            tableBody.appendChild(row);
+        });
+    }
+
+    function createRedditKeywordsTable(filter) {
+        const postsToAnalyze = (filter === 'all' ? allRedditPosts : allRedditPosts.filter(p => p.subreddit === filter));
+        const tableBody = document.getElementById('redditKeywordsBody');
+        const redditStopWords = new Set(['a', 'an', 'the', 'i', 'you', 'he', 'she', 'it', 'we', 'they', 'my', 'is', 'are', 'was', 'to', 'of', 'in', 'for', 'on', 'with', 'this', 'that', 'what', 'who', 'when', 'why', 'how', 'oc', 'ama', 'til', 'eli5', 'cmv', 'and']);
+        const wordCounts = {};
+        const allTitles = postsToAnalyze.map(post => post.title).join(' ');
+        const words = allTitles.toLowerCase().match(/\b[a-zA-Z]{3,}\b/g)?.filter(word => !redditStopWords.has(word)) || [];
+        words.forEach(word => { wordCounts[word] = (wordCounts[word] || 0) + 1; });
+        const wordList = Object.entries(wordCounts).sort((a, b) => b[1] - a[1]).slice(0, 50);
+        tableBody.innerHTML = wordList.map(([keyword, freq]) => `<tr><td>${keyword}</td><td>${freq}</td></tr>`).join('');
+    }
+
+    function createActiveUserTable(filter) {
+        const postsToAnalyze = (filter === 'all' ? allRedditPosts : allRedditPosts.filter(p => p.subreddit === filter));
+        const userStats = {};
+        postsToAnalyze.forEach(post => {
+            if (!userStats[post.author]) {
+                userStats[post.author] = { posts: 0, totalUpvotes: 0 };
+            }
+            userStats[post.author].posts++;
+            userStats[post.author].totalUpvotes += post.score;
+        });
+        const sortedUsers = Object.entries(userStats).sort(([, a], [, b]) => b.totalUpvotes - a.totalUpvotes);
+        const tableBody = document.getElementById('redditUsersBody');
+        tableBody.innerHTML = '';
+        sortedUsers.slice(0, 50).forEach(([author, stats]) => {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td><a href="https://www.reddit.com/user/${author}" target="_blank" rel="noopener noreferrer">${author}</a></td>
+                <td>${stats.totalUpvotes.toLocaleString()}</td>
+                <td>${stats.posts}</td>`;
+            tableBody.appendChild(row);
+        });
+    }
+    
+    function createRedditActivityChart(subreddits) {
+        if (chartInstances.activity) chartInstances.activity.destroy();
+        const now = Date.now();
+        const labels = Array.from({length: 24}, (_, i) => new Date(now - (23 - i) * 36e5).toLocaleTimeString('en-US', { hour: 'numeric' }));
+        const colorPalette = ['#FF5700', '#33a8ff', '#54C76E', '#FFB000', '#9B59B6', '#E74C3C'];
+        const datasets = subreddits.map((sub, index) => {
+            const subPosts = allRedditPosts.filter(p => p.subreddit === sub);
+            const hourlyUpvotes = Array(24).fill(0);
+            subPosts.forEach(post => {
+                const hoursAgo = Math.floor((now - post.time.getTime()) / 36e5);
+                if (hoursAgo >= 0 && hoursAgo < 24) hourlyUpvotes[23 - hoursAgo] += post.score;
+            });
+            const color = colorPalette[index % colorPalette.length];
+            return { label: `r/${sub} Upvotes`, data: hourlyUpvotes, borderColor: color, backgroundColor: `${color}99`, type: 'bar' };
+        });
+        const ctx = document.getElementById('redditActivityChart').getContext('2d');
+        chartInstances.activity = new Chart(ctx, {
+            type: 'bar', data: { labels, datasets },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#f9fafb' } } }, scales: { y: { beginAtZero: true, ticks: { color: '#9ca3af' }, grid: { color: '#374151' } }, x: { ticks: { color: '#9ca3af' }, grid: { color: '#374151' } } } }
+        });
+    }
+
+    function createPostTypeChart(subreddits) {
+        if (chartInstances.postTypes) chartInstances.postTypes.destroy();
+        const typeCounts = {};
+        allRedditPosts.forEach(post => {
+            let simpleType = post.type.includes('video') ? 'Video' : post.type.includes('image') ? 'Image' : post.type === 'link' ? 'Link' : 'Text';
+            typeCounts[simpleType] = (typeCounts[simpleType] || 0) + 1;
+        });
+        const labels = Object.keys(typeCounts);
+        const data = Object.values(typeCounts);
+        const colorPalette = ['#33a8ff', '#54C76E', '#FFB000', '#9B59B6'];
+        const ctx = document.getElementById('redditPostTypeChart').getContext('2d');
+        chartInstances.postTypes = new Chart(ctx, {
+            type: 'doughnut',
+            data: { labels, datasets: [{ data, backgroundColor: colorPalette, borderColor: '#1f2937', borderWidth: 2 }] },
+            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { color: '#f9fafb' } } } }
+        });
+    }
+
+    function setupFilterButtons(containerId, sources, clickHandler) {
+        const filtersContainer = document.getElementById(containerId);
+        if (!filtersContainer) return;
+        filtersContainer.innerHTML = '';
+        const createBtn = (text, name, color) => {
+            const button = document.createElement('button');
+            button.className = 'filter-btn';
+            button.textContent = text;
+            button.onclick = () => {
+                filtersContainer.querySelectorAll('.filter-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    btn.style.backgroundColor = 'var(--border-color)';
+                    btn.style.color = 'var(--text-secondary)';
+                });
+                button.classList.add('active');
+                button.style.backgroundColor = color;
+                button.style.color = '#fff';
+                clickHandler(name);
+            };
+            filtersContainer.appendChild(button);
+            return button;
+        };
+        const allBtn = createBtn('All', 'all', '#6b7280');
+        sources.forEach(source => createBtn(`r/${source}`, source, REDDIT_ORANGE));
+        allBtn.click();
+    }
+})();
+</script>
+
+</body>
+</html>
