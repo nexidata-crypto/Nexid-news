@@ -140,7 +140,7 @@
 
 <script>
 (() => {
-    // URL for the Google Apps Script proxy
+    // ❗ IMPORTANT: PASTE YOUR GOOGLE APPS SCRIPT URL HERE
     const REDDIT_API_URL = 'https://script.google.com/macros/s/AKfycbzHFkhR-WmkuziYjQpEyao5ozej9cDLhxkmONc_v_7SXpq61fv__0xBwfujgdSGzuv5/exec'; 
 
     const REDDIT_ORANGE = '#FF5700';
@@ -182,6 +182,11 @@
     form.addEventListener('submit', async (event) => {
         event.preventDefault();
         
+        if (REDDIT_API_URL === 'YOUR_GOOGLE_APPS_SCRIPT_URL_HERE') {
+            resultsContainer.innerHTML = `<div class="error-message"><strong>Configuration Needed:</strong> Please create the Google Apps Script proxy and paste its URL into the REDDIT_API_URL constant.</div>`;
+            return;
+        }
+
         loader.style.display = 'block';
         resultsContainer.innerHTML = '';
         scorecardSection.style.display = 'none';
