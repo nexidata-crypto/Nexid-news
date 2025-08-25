@@ -228,9 +228,8 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* UPDATED: Rule to properly center the Google Sign-In button */
         .g_id_signin {
-            display: inline-block; /* This makes the container shrink to the button's size */
+            display: inline-block; 
         }
 
         /* Cyberpunk Update Modal Styles */
@@ -398,13 +397,16 @@
             document.getElementById('dashboard-wrapper').classList.remove('hidden');
         }
 
+        /**
+         * UPDATED: Simplified signOut function. 
+         * Removing the token revocation allows Google's "remember me" feature to work,
+         * preventing the user from having to sign in every time.
+         */
         function signOut() {
             google.accounts.id.disableAutoSelect();
-            google.accounts.id.revoke(localStorage.getItem('email'), done => {
-                localStorage.clear();
-                document.getElementById('dashboard-wrapper').classList.add('hidden');
-                document.getElementById('login-container').classList.remove('hidden');
-            });
+            localStorage.clear();
+            document.getElementById('dashboard-wrapper').classList.add('hidden');
+            document.getElementById('login-container').classList.remove('hidden');
         }
 
         document.addEventListener('DOMContentLoaded', () => {
@@ -418,60 +420,69 @@
             signOutButton.addEventListener('click', signOut);
 
             // --- UPDATE DIALOG LOGIC ---
-            
-            // 1. SET YOUR UPDATE VERSION AND NOTES HERE
-            const currentUpdateVersion = "1.6.2"; // Change this to show the dialog again
+            const currentUpdateVersion = "1.1.0"; 
             const updateNotes = `
-                <h3>Fixes</h3>
+                <h3>UI/UX Overhaul</h3>
                 <ul>
-                    <li>Reddit is working now</li>
-                    <li>No more lag on the main page</li>
+                    <li>Implemented a new cyberpunk-themed aesthetic.</li>
+                    <li>Added a smoother, animated gradient background.</li>
+                    <li>Login screen now features a modern glassmorphism effect.</li>
                 </ul>
                 <h3>New Features</h3>
                 <ul>
-                    <li>Added Google Authentication</li>
+                    <li>This "What's New" dialog box has been added!</li>
+                    <li>Added a loading spinner when dashboard content is loading.</li>
                 </ul>
             `;
-
             const updateModalOverlay = document.getElementById('update-modal-overlay');
             const closeUpdateModalBtn = document.getElementById('close-update-modal');
             const updateNotesContent = document.getElementById('update-notes-content');
-            
-            // 2. Check if the user has already seen this version
             const lastSeenVersion = localStorage.getItem('lastUpdateSeen');
-
             if (lastSeenVersion !== currentUpdateVersion) {
-                // Inject the notes and show the modal
                 updateNotesContent.innerHTML = updateNotes;
                 updateModalOverlay.classList.add('visible');
             }
-
-            // 3. Handle closing the modal
             closeUpdateModalBtn.addEventListener('click', () => {
                 updateModalOverlay.classList.remove('visible');
-                // Save the current version so it won't show again
                 localStorage.setItem('lastUpdateSeen', currentUpdateVersion);
             });
             // --- END OF UPDATE DIALOG LOGIC ---
 
-
+            /**
+             * UPDATED: More robust tab loading logic.
+             * This ensures the iframe is added to the DOM before loading starts,
+             * preventing it from getting stuck.
+             */
             tabLinks.forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
                     tabLinks.forEach(l => l.classList.remove('active'));
                     link.classList.add('active');
                     
-                    mainContent.innerHTML = '<div class="loader"></div>';
+                    // 1. Clear the content area and add padding for the loader.
+                    mainContent.innerHTML = '';
                     mainContent.style.padding = '2rem';
 
+                    // 2. Create and append the loader.
+                    const loader = document.createElement('div');
+                    loader.className = 'loader';
+                    mainContent.appendChild(loader);
+
+                    // 3. Create the iframe and hide it initially.
                     const iframe = document.createElement('iframe');
                     iframe.id = 'content-frame';
-                    iframe.src = link.href;
+                    iframe.style.display = 'none';
+
+                    // 4. Define what happens when the iframe finishes loading.
                     iframe.onload = () => {
-                        mainContent.innerHTML = '';
-                        mainContent.style.padding = '0';
-                        mainContent.appendChild(iframe);
+                        loader.remove(); // Remove the loader
+                        iframe.style.display = 'block'; // Show the iframe
+                        mainContent.style.padding = '0'; // Remove padding
                     };
+
+                    // 5. Append the hidden iframe to the DOM and set its source to start loading.
+                    mainContent.appendChild(iframe);
+                    iframe.src = link.href;
                     
                     gtag('event', 'page_view', { page_path: link.getAttribute('href') });
                 });
