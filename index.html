@@ -8,7 +8,8 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <!-- ADDED: Orbitron font for cyberpunk aesthetic -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
 
     <!-- Stylesheet -->
     <link rel="stylesheet" href="style.css">
@@ -30,7 +31,6 @@
         body {
             font-family: 'Inter', sans-serif;
             margin: 0;
-            /* UPDATED: Darker gradient for a better dark theme feel */
             background: linear-gradient(-45deg, #020617, #111827, #0f172a, #1e293b);
             background-size: 400% 400%;
             animation: gradientBG 15s ease infinite;
@@ -64,7 +64,6 @@
             padding: 3rem;
             border-radius: 16px;
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            /* ADDED: Flex properties to ensure the Google button is centered */
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -90,7 +89,6 @@
             transition: opacity 0.5s ease-in, visibility 0.5s ease-in;
         }
         
-        /* Utility class for hiding elements with a fade */
         .hidden {
             opacity: 0;
             visibility: hidden;
@@ -152,7 +150,6 @@
             background-color: transparent;
         }
 
-        /* Animated NEXID title */
         .nexid-title {
             font-size: 6rem;
             font-weight: 700;
@@ -174,7 +171,6 @@
             to { transform: rotateY(360deg); }
         }
 
-        /* Footer credit */
         #credit-footer {
             position: fixed;
             bottom: 10px;
@@ -183,7 +179,6 @@
             color: #4b5563;
         }
         
-        /* User info and sign-out button */
         #user-info {
             margin-top: auto;
             padding-top: 1.5rem;
@@ -218,7 +213,6 @@
             background: #8b5cf6;
         }
 
-        /* Loading Spinner */
         .loader {
             width: 48px;
             height: 48px;
@@ -233,9 +227,112 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
+        
+        /* UPDATED: Rule to properly center the Google Sign-In button */
+        .g_id_signin {
+            display: inline-block; /* This makes the container shrink to the button's size */
+        }
+
+        /* Cyberpunk Update Modal Styles */
+        #update-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(10, 10, 20, 0.8);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+        #update-modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+        .update-dialog {
+            font-family: 'Inter', sans-serif;
+            background: #0a0a14;
+            border: 1px solid #00ffcc;
+            box-shadow: 0 0 15px #00ffcc, 0 0 30px #00ffcc inset;
+            color: #e0e0e0;
+            padding: 2rem;
+            width: 90%;
+            max-width: 500px;
+            position: relative;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+        #update-modal-overlay.visible .update-dialog {
+            transform: scale(1);
+        }
+        .update-dialog-header {
+            text-align: center;
+            margin-bottom: 1.5rem;
+        }
+        .update-dialog-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2rem;
+            color: #ff00ff;
+            text-shadow: 0 0 5px #ff00ff, 0 0 10px #ff00ff;
+            animation: glitch 1.5s infinite;
+        }
+        @keyframes glitch {
+            2%,64%{ transform: translate(2px,0) skew(0deg); }
+            4%,60%{ transform: translate(-2px,0) skew(0deg); }
+            62%{ transform: translate(0,0) skew(5deg); }
+        }
+        .update-dialog-body {
+            line-height: 1.6;
+            margin-bottom: 2rem;
+        }
+        .update-dialog-body h3 {
+            color: #00ffcc;
+            margin-bottom: 0.5rem;
+        }
+        .update-dialog-body ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        .update-dialog-body li::before {
+            content: '>> ';
+            color: #ff00ff;
+        }
+        .close-modal-btn {
+            position: absolute;
+            top: 10px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #00ffcc;
+            font-size: 2rem;
+            cursor: pointer;
+            text-shadow: 0 0 5px #00ffcc;
+            transition: color 0.2s;
+        }
+        .close-modal-btn:hover {
+            color: #ff00ff;
+        }
     </style>
 </head>
 <body>
+
+    <!-- Update Dialog HTML -->
+    <div id="update-modal-overlay">
+        <div class="update-dialog">
+            <button class="close-modal-btn" id="close-update-modal">&times;</button>
+            <div class="update-dialog-header">
+                <h2 class="update-dialog-title">SYSTEM UPDATE</h2>
+            </div>
+            <div class="update-dialog-body" id="update-notes-content">
+                <!-- Update notes will be injected here by JavaScript -->
+            </div>
+        </div>
+    </div>
 
     <div id="login-container">
         <div class="login-box">
@@ -320,23 +417,59 @@
 
             signOutButton.addEventListener('click', signOut);
 
+            // --- UPDATE DIALOG LOGIC ---
+            
+            // 1. SET YOUR UPDATE VERSION AND NOTES HERE
+            const currentUpdateVersion = "1.6.2"; // Change this to show the dialog again
+            const updateNotes = `
+                <h3>Fixes</h3>
+                <ul>
+                    <li>Reddit is working now</li>
+                    <li>No more lag on the main page</li>
+                </ul>
+                <h3>New Features</h3>
+                <ul>
+                    <li>Added Google Authentication</li>
+                </ul>
+            `;
+
+            const updateModalOverlay = document.getElementById('update-modal-overlay');
+            const closeUpdateModalBtn = document.getElementById('close-update-modal');
+            const updateNotesContent = document.getElementById('update-notes-content');
+            
+            // 2. Check if the user has already seen this version
+            const lastSeenVersion = localStorage.getItem('lastUpdateSeen');
+
+            if (lastSeenVersion !== currentUpdateVersion) {
+                // Inject the notes and show the modal
+                updateNotesContent.innerHTML = updateNotes;
+                updateModalOverlay.classList.add('visible');
+            }
+
+            // 3. Handle closing the modal
+            closeUpdateModalBtn.addEventListener('click', () => {
+                updateModalOverlay.classList.remove('visible');
+                // Save the current version so it won't show again
+                localStorage.setItem('lastUpdateSeen', currentUpdateVersion);
+            });
+            // --- END OF UPDATE DIALOG LOGIC ---
+
+
             tabLinks.forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
                     tabLinks.forEach(l => l.classList.remove('active'));
                     link.classList.add('active');
                     
-                    // Show loader
                     mainContent.innerHTML = '<div class="loader"></div>';
-                    mainContent.style.padding = '2rem'; // Restore padding for loader
+                    mainContent.style.padding = '2rem';
 
-                    // Create iframe and listen for load event
                     const iframe = document.createElement('iframe');
                     iframe.id = 'content-frame';
                     iframe.src = link.href;
                     iframe.onload = () => {
-                        mainContent.innerHTML = ''; // Clear loader
-                        mainContent.style.padding = '0'; // Remove padding for iframe
+                        mainContent.innerHTML = '';
+                        mainContent.style.padding = '0';
                         mainContent.appendChild(iframe);
                     };
                     
