@@ -30,7 +30,8 @@
         body {
             font-family: 'Inter', sans-serif;
             margin: 0;
-            background: linear-gradient(-45deg, #111827, #1f2937, #374151, #4b5563);
+            /* UPDATED: Darker gradient for a better dark theme feel */
+            background: linear-gradient(-45deg, #020617, #111827, #0f172a, #1e293b);
             background-size: 400% 400%;
             animation: gradientBG 15s ease infinite;
             color: #f9fafb;
@@ -63,6 +64,10 @@
             padding: 3rem;
             border-radius: 16px;
             box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+            /* ADDED: Flex properties to ensure the Google button is centered */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         #login-container h2 {
