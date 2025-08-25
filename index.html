@@ -11,27 +11,107 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Stylesheet -->
+    <!-- Make sure you have a style.css file with your original sidebar/footer styles -->
     <link rel="stylesheet" href="style.css">
 
     <!-- Google Analytics -->
-    <!-- IMPORTANT: Replace G-5XCH2XQTFB with your actual Measurement ID -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-5XCH2XQTFB"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
       gtag('js', new Date());
-
       gtag('config', 'G-5XCH2XQTFB'); 
     </script>
 
+    <!-- Google Identity Services Library -->
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+
     <style>
-        /* This style block now includes the NEXID title animation */
+        /* General body styles */
+        body {
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            background-color: #111827; /* Dark background */
+            color: #f9fafb;
+            overflow: hidden; /* Prevents scrollbars from the main layout */
+        }
+
+        /* Login screen styles */
+        #login-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            text-align: center;
+            padding: 2rem;
+            background-color: #111827;
+        }
+        #login-container h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #fff;
+            margin-bottom: 1rem;
+        }
+        #login-container p {
+            color: #9ca3af;
+            margin-bottom: 2.5rem;
+            max-width: 400px;
+        }
+
+        /* Dashboard wrapper, hidden by default */
+        #dashboard-wrapper {
+            display: none; /* Hidden until login */
+            width: 100%;
+            height: 100vh;
+            display: flex;
+        }
+
+        /* Sidebar styles from your original design */
+        #sidebar {
+            width: 250px;
+            background-color: #1f2937;
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid #374151;
+        }
+        #dashboard-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin: 0 0 2rem 0;
+            color: #a78bfa;
+            cursor: pointer;
+        }
+        #sidebar nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        #sidebar nav li a {
+            display: block;
+            color: #d1d5db;
+            text-decoration: none;
+            padding: 0.75rem 1rem;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            transition: background-color 0.2s, color 0.2s;
+        }
+        #sidebar nav li a:hover, #sidebar nav li a.active {
+            background-color: #374151;
+            color: #ffffff;
+        }
+
+        /* Main content area */
         #main-content {
+            flex-grow: 1;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 2rem;
-            perspective: 1000px; /* Adds perspective for 3D effects */
+            perspective: 1000px;
+            overflow: hidden;
+            position: relative;
         }
         #content-frame {
             width: 100%;
@@ -39,145 +119,254 @@
             border: none;
         }
 
-        /* Styling for the animated NEXID title */
+        /* Animated NEXID title */
         .nexid-title {
             font-size: 6rem;
             font-weight: 700;
             letter-spacing: 5px;
-            color: #a78bfa; /* Purple color */
+            color: #a78bfa;
             text-align: center;
-            transform-style: preserve-3d; /* Allows children to be transformed in 3D space */
+            transform-style: preserve-3d;
             transition: transform 0.1s linear, text-shadow 0.1s linear;
-            /* The glow and transform are now controlled by CSS variables */
             text-shadow: var(--glow-x, 0px) var(--glow-y, 0px) 16px rgba(167, 139, 250, 0.7);
             transform: rotateX(var(--rotate-x, 0deg)) rotateY(var(--rotate-y, 0deg));
         }
-
-        /* Styling for the bigger 'X' */
         .nexid-title span {
             font-size: 7.5rem;
             display: inline-block;
-            /* The animation is now the simple spin again */
             animation: spinX 6s linear infinite;
         }
-        
-        /* Restored the simple spin animation */
         @keyframes spinX {
-            from {
-                transform: rotateY(0deg);
-            }
-            to {
-                transform: rotateY(360deg);
-            }
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(360deg); }
+        }
+
+        /* Footer credit */
+        #credit-footer {
+            position: fixed;
+            bottom: 10px;
+            right: 15px;
+            font-size: 0.8rem;
+            color: #4b5563;
+        }
+        
+        /* User info and sign-out button */
+        #user-info {
+            margin-top: auto; /* Pushes it to the bottom of the sidebar */
+            padding-top: 1.5rem;
+            text-align: center;
+            border-top: 1px solid #374151;
+        }
+        #user-info img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-bottom: 0.75rem;
+            border: 2px solid #4f46e5;
+        }
+        #user-info p {
+            color: #e5e7eb;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin: 0 0 1rem;
+        }
+        #sign-out-button {
+            background: #a78bfa;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: 600;
+            transition: background-color 0.2s;
+        }
+        #sign-out-button:hover {
+            background: #8b5cf6;
         }
     </style>
 </head>
 <body>
-    <aside id="sidebar">
-        <h1 id="dashboard-title">Dashboard</h1>
-        <nav>
-            <ul>
-                <!-- UPDATED: Sidebar links reordered and renamed -->
-                <li><a href="sitemap.html" class="tab-link">ARTICLES</a></li>
-                <li><a href="youtube.html" class="tab-link">YOUTUBE</a></li>
-                <li><a href="reddit.html" class="tab-link">REDDIT</a></li>
-                <li><a href="semrush.html" class="tab-link">SEMRUSH</a></li>
-                <li><a href="instagram.html" class="tab-link">INSTAGRAM</a></li>
-                <li><a href="facebook.html" class="tab-link">FACEBOOK</a></li>
-                <li><a href="twitter.html" class="tab-link">TWITTER</a></li>
-                <li><a href="linkedin.html" class="tab-link">LINKEDIN</a></li>
-                <li><a href="comscore.html" class="tab-link">COMSCORE</a></li>
-            </ul>
-        </nav>
-    </aside>
 
-    <!-- The main content area now starts with the NEXID title -->
-    <main id="main-content">
-        <div class="nexid-title">NE<span>X</span>ID</div>
-    </main>
+    <!-- Login screen, visible by default -->
+    <div id="login-container">
+        <h2>Welcome to NEXID</h2>
+        <p>Your unified multi-platform analysis dashboard. Please sign in with Google to continue.</p>
+        <!-- The Google Sign-In button will be rendered here -->
+        <div id="g_id_onload"
+             data-client_id="1038030558654-6j7ccj0j90ospsrnpus297q7sb021ivn.apps.googleusercontent.com"
+             data-callback="onSignIn"
+             data-auto_select="true">
+        </div>
+        <div class="g_id_signin" 
+             data-type="standard"
+             data-theme="outline"
+             data-size="large"
+             data-text="sign_in_with"
+             data-shape="rectangular"
+             data-logo_alignment="left">
+        </div>
+    </div>
+    
+    <!-- Wrapper for your entire dashboard, hidden by default -->
+    <div id="dashboard-wrapper">
+        <aside id="sidebar">
+            <h1 id="dashboard-title">Dashboard</h1>
+            <nav>
+                <ul>
+                    <!-- Sidebar links -->
+                    <li><a href="sitemap.html" class="tab-link">ARTICLES</a></li>
+                    <li><a href="youtube.html" class="tab-link">YOUTUBE</a></li>
+                    <li><a href="reddit.html" class="tab-link">REDDIT</a></li>
+                    <li><a href="semrush.html" class="tab-link">SEMRUSH</a></li>
+                    <li><a href="instagram.html" class="tab-link">INSTAGRAM</a></li>
+                    <li><a href="facebook.html" class="tab-link">FACEBOOK</a></li>
+                    <li><a href="twitter.html" class="tab-link">TWITTER</a></li>
+                    <li><a href="linkedin.html" class="tab-link">LINKEDIN</a></li>
+                    <li><a href="comscore.html" class="tab-link">COMSCORE</a></li>
+                </ul>
+            </nav>
+            <!-- User profile and sign-out button -->
+            <div id="user-info">
+                <img id="user-pic" src="" alt="User profile picture">
+                <p id="user-name"></p>
+                <button id="sign-out-button">Sign Out</button>
+            </div>
+        </aside>
 
-    <div id="credit-footer">
-        By Nexid
+        <main id="main-content">
+            <div class="nexid-title">NE<span>X</span>ID</div>
+        </main>
+
+        <div id="credit-footer">
+            By Nexid
+        </div>
     </div>
 
     <script>
+        /**
+         * Callback function that handles the response from Google Sign-In.
+         * @param {object} googleUser - The object containing user credential information.
+         */
+        function onSignIn(googleUser) {
+            // Decode the JWT token to get user profile information
+            const token = googleUser.credential;
+            const userProfile = JSON.parse(atob(token.split('.')[1]));
+
+            // Update the UI with user's name and profile picture
+            document.getElementById('user-name').innerText = userProfile.name;
+            document.getElementById('user-pic').src = userProfile.picture;
+
+            // Hide the login screen and show the main dashboard
+            document.getElementById('login-container').style.display = 'none';
+            document.getElementById('dashboard-wrapper').style.display = 'flex';
+        }
+
+        /**
+         * Signs the user out, revokes the token, and returns to the login screen.
+         */
+        function signOut() {
+            google.accounts.id.disableAutoSelect();
+            google.accounts.id.revoke(localStorage.getItem('email'), done => {
+                // Clear any stored user info if necessary
+                localStorage.clear();
+                // Hide the dashboard and show the login screen again
+                document.getElementById('login-container').style.display = 'flex';
+                document.getElementById('dashboard-wrapper').style.display = 'none';
+            });
+        }
+
+        // Main script execution after the DOM is fully loaded
         document.addEventListener('DOMContentLoaded', () => {
             const tabLinks = document.querySelectorAll('.tab-link');
             const mainContent = document.getElementById('main-content');
             const dashboardTitle = document.getElementById('dashboard-title');
+            const signOutButton = document.getElementById('sign-out-button');
             
+            // Store the initial state of the main content to restore it later
             const initialContent = mainContent.innerHTML;
 
+            // Attach the signOut function to the sign-out button
+            signOutButton.addEventListener('click', signOut);
+
+            // Add click event listeners to all sidebar navigation links
             tabLinks.forEach(link => {
                 link.addEventListener('click', (e) => {
-                    e.preventDefault();
+                    e.preventDefault(); // Prevent default link navigation
+                    // Manage active state for sidebar links
                     tabLinks.forEach(l => l.classList.remove('active'));
                     link.classList.add('active');
+                    
+                    // Load the content into an iframe
                     mainContent.style.padding = '0';
                     mainContent.innerHTML = `<iframe id="content-frame" src="${link.href}"></iframe>`;
 
-                    // --- ADDED THIS LINE FOR ANALYTICS ---
-                    // This sends a page_view event to Google Analytics with the path of the tool
+                    // Send a page_view event to Google Analytics
                     gtag('event', 'page_view', {
                         page_path: link.getAttribute('href')
                     });
                 });
             });
 
-            dashboardTitle.style.cursor = 'pointer';
+            // Make the main dashboard title clickable to return to the home screen
             dashboardTitle.addEventListener('click', () => {
                 mainContent.innerHTML = initialContent;
                 mainContent.style.padding = '2rem';
                 tabLinks.forEach(l => l.classList.remove('active'));
-                initNexidInteraction();
+                initNexidInteraction(); // Re-initialize the mouse-move effect
 
-                // --- ADDED THIS LINE FOR ANALYTICS ---
-                // This sends a page_view event when returning to the home screen
+                // Send a page_view event for returning home
                 gtag('event', 'page_view', {
                     page_path: '/home'
                 });
             });
 
+            /**
+             * Initializes the interactive 3D effect on the NEXID title.
+             */
             function initNexidInteraction() {
                 const titleEl = document.querySelector('.nexid-title');
-                if (!titleEl) return;
+                if (!titleEl) return; // Exit if the title element isn't on the page
 
+                // Track mouse movement over the main content area
                 mainContent.addEventListener('mousemove', (e) => {
                     const { clientX, clientY } = e;
-                    const { offsetWidth, offsetHeight } = mainContent;
+                    const { offsetWidth, offsetHeight, offsetLeft, offsetTop } = mainContent;
+                    
+                    // Calculate mouse position relative to the center of the main content area
                     const centerX = offsetWidth / 2;
                     const centerY = offsetHeight / 2;
-                    const moveX = (clientX - centerX) / centerX;
-                    const moveY = (clientY - centerY) / centerY;
+                    const moveX = (clientX - offsetLeft - centerX) / centerX;
+                    const moveY = (clientY - offsetTop - centerY) / centerY;
                     
-                    let rotateX = 0;
-                    let glowY = 0;
+                    // Define the intensity of the rotation and glow
+                    const rotateIntensity = 8;
+                    const glowIntensity = 15;
 
-                    if (moveY > 0) {
-                        rotateX = moveY * -8;
-                        glowY = moveY * 15;
-                    }
-                    
-                    const rotateY = moveX * 8;
-                    const glowX = moveX * 15;
+                    const rotateX = moveY * -rotateIntensity;
+                    const rotateY = moveX * rotateIntensity;
+                    const glowX = moveX * glowIntensity;
+                    const glowY = moveY * glowIntensity;
 
+                    // Apply the transformations via CSS custom properties
                     titleEl.style.setProperty('--rotate-x', `${rotateX}deg`);
                     titleEl.style.setProperty('--rotate-y', `${rotateY}deg`);
                     titleEl.style.setProperty('--glow-x', `${glowX}px`);
                     titleEl.style.setProperty('--glow-y', `${glowY}px`);
                 });
 
+                // Reset the effect when the mouse leaves the area
                 mainContent.addEventListener('mouseleave', () => {
-                     titleEl.style.setProperty('--rotate-x', `0deg`);
-                     titleEl.style.setProperty('--rotate-y', `0deg`);
-                     titleEl.style.setProperty('--glow-x', `0px`);
-                     titleEl.style.setProperty('--glow-y', `0px`);
+                    titleEl.style.setProperty('--rotate-x', `0deg`);
+                    titleEl.style.setProperty('--rotate-y', `0deg`);
+                    titleEl.style.setProperty('--glow-x', `0px`);
+                    titleEl.style.setProperty('--glow-y', `0px`);
                 });
             }
             
+            // Initialize the NEXID title interaction on page load
             initNexidInteraction();
         });
     </script>
 </body>
 </html>
-
