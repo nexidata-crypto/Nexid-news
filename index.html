@@ -8,7 +8,6 @@
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- ADDED: Orbitron font for cyberpunk aesthetic -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
 
     <!-- Stylesheet -->
@@ -228,10 +227,10 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* UPDATED: This rule ensures the Google button container shrinks to fit, allowing it to be centered. */
+        /* UPDATED: More reliable centering for the Google Sign-In button container */
         .g_id_signin {
-            width: fit-content !important;
-            margin: 0 auto !important;
+            display: flex;
+            justify-content: center;
         }
 
         /* Cyberpunk Update Modal Styles */
@@ -407,7 +406,8 @@
          */
         function signOut() {
             google.accounts.id.disableAutoSelect();
-            // localStorage.clear(); // This line was causing the issues.
+            // NOTE: We do NOT clear localStorage here, as that would forget the user's
+            // "update seen" status and cause the dialog to reappear unnecessarily.
             document.getElementById('dashboard-wrapper').classList.add('hidden');
             document.getElementById('login-container').classList.remove('hidden');
         }
@@ -423,7 +423,7 @@
             signOutButton.addEventListener('click', signOut);
 
             // --- UPDATE DIALOG LOGIC ---
-            const currentUpdateVersion = "1.2.0"; // Change this to show the dialog again
+            const currentUpdateVersion = "1.2.1"; // Change this to show the dialog again
             const updateNotes = `
                 <h3>System Patches & Fixes</h3>
                 <ul>
