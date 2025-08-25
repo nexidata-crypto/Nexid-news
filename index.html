@@ -228,8 +228,10 @@
             100% { transform: rotate(360deg); }
         }
         
+        /* UPDATED: This rule ensures the Google button container shrinks to fit, allowing it to be centered. */
         .g_id_signin {
-            display: inline-block; 
+            width: fit-content !important;
+            margin: 0 auto !important;
         }
 
         /* Cyberpunk Update Modal Styles */
@@ -338,7 +340,7 @@
             <h2>Welcome to NEXID</h2>
             <p>Your unified multi-platform analysis dashboard. Please sign in with Google to continue.</p>
             <div id="g_id_onload"
-                 data-client_id="1038030558654-6j7ccj0j90ospsrnpus297q7sb021ivn.apps.googleusercontent.com"
+                 data-client_id="1038030558654-6j7ccj0j90ospsrnpus2D7q7sb021ivn.apps.googleusercontent.com"
                  data-callback="onSignIn"
                  data-auto_select="true">
             </div>
@@ -399,12 +401,13 @@
 
         /**
          * UPDATED: Simplified signOut function. 
-         * Removing the token revocation allows Google's "remember me" feature to work,
-         * preventing the user from having to sign in every time.
+         * Removing localStorage.clear() fixes two bugs:
+         * 1. It allows Google's "remember me" feature to work.
+         * 2. It stops the update dialog from reappearing after every sign-out.
          */
         function signOut() {
             google.accounts.id.disableAutoSelect();
-            localStorage.clear();
+            // localStorage.clear(); // This line was causing the issues.
             document.getElementById('dashboard-wrapper').classList.add('hidden');
             document.getElementById('login-container').classList.remove('hidden');
         }
@@ -420,18 +423,14 @@
             signOutButton.addEventListener('click', signOut);
 
             // --- UPDATE DIALOG LOGIC ---
-            const currentUpdateVersion = "1.1.0"; 
+            const currentUpdateVersion = "1.2.0"; // Change this to show the dialog again
             const updateNotes = `
-                <h3>UI/UX Overhaul</h3>
+                <h3>System Patches & Fixes</h3>
                 <ul>
-                    <li>Implemented a new cyberpunk-themed aesthetic.</li>
-                    <li>Added a smoother, animated gradient background.</li>
-                    <li>Login screen now features a modern glassmorphism effect.</li>
-                </ul>
-                <h3>New Features</h3>
-                <ul>
-                    <li>This "What's New" dialog box has been added!</li>
-                    <li>Added a loading spinner when dashboard content is loading.</li>
+                    <li>Corrected a session error that required re-login on every visit. Your session is now remembered.</li>
+                    <li>Fixed a bug causing the update dialog to appear on every page load.</li>
+                    <li>Resolved an issue where dashboard tabs would get stuck on the loading screen.</li>
+                    <li>Patched a UI glitch causing the Google Sign-In button to be misaligned.</li>
                 </ul>
             `;
             const updateModalOverlay = document.getElementById('update-modal-overlay');
@@ -449,9 +448,7 @@
             // --- END OF UPDATE DIALOG LOGIC ---
 
             /**
-             * UPDATED: More robust tab loading logic.
-             * This ensures the iframe is added to the DOM before loading starts,
-             * preventing it from getting stuck.
+             * More robust tab loading logic.
              */
             tabLinks.forEach(link => {
                 link.addEventListener('click', (e) => {
@@ -459,28 +456,23 @@
                     tabLinks.forEach(l => l.classList.remove('active'));
                     link.classList.add('active');
                     
-                    // 1. Clear the content area and add padding for the loader.
                     mainContent.innerHTML = '';
                     mainContent.style.padding = '2rem';
 
-                    // 2. Create and append the loader.
                     const loader = document.createElement('div');
                     loader.className = 'loader';
                     mainContent.appendChild(loader);
 
-                    // 3. Create the iframe and hide it initially.
                     const iframe = document.createElement('iframe');
                     iframe.id = 'content-frame';
                     iframe.style.display = 'none';
 
-                    // 4. Define what happens when the iframe finishes loading.
                     iframe.onload = () => {
-                        loader.remove(); // Remove the loader
-                        iframe.style.display = 'block'; // Show the iframe
-                        mainContent.style.padding = '0'; // Remove padding
+                        loader.remove(); 
+                        iframe.style.display = 'block'; 
+                        mainContent.style.padding = '0'; 
                     };
 
-                    // 5. Append the hidden iframe to the DOM and set its source to start loading.
                     mainContent.appendChild(iframe);
                     iframe.src = link.href;
                     
