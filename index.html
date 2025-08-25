@@ -11,7 +11,6 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Stylesheet -->
-    <!-- Make sure you have a style.css file with your original sidebar/footer styles -->
     <link rel="stylesheet" href="style.css">
 
     <!-- Google Analytics -->
@@ -31,9 +30,17 @@
         body {
             font-family: 'Inter', sans-serif;
             margin: 0;
-            background-color: #111827; /* Dark background */
+            background: linear-gradient(-45deg, #111827, #1f2937, #374151, #4b5563);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
             color: #f9fafb;
-            overflow: hidden; /* Prevents scrollbars from the main layout */
+            overflow: hidden;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
         }
 
         /* Login screen styles */
@@ -45,8 +52,19 @@
             height: 100vh;
             text-align: center;
             padding: 2rem;
-            background-color: #111827;
+            transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
         }
+        
+        .login-box {
+            background: rgba(31, 41, 55, 0.5);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 3rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
         #login-container h2 {
             font-size: 2.5rem;
             font-weight: 700;
@@ -54,20 +72,28 @@
             margin-bottom: 1rem;
         }
         #login-container p {
-            color: #9ca3af;
+            color: #d1d5db;
             margin-bottom: 2.5rem;
             max-width: 400px;
         }
 
-        /* Dashboard wrapper, hidden by default */
+        /* Dashboard wrapper */
         #dashboard-wrapper {
-            display: none; /* Hidden until login */
             width: 100%;
             height: 100vh;
             display: flex;
+            transition: opacity 0.5s ease-in, visibility 0.5s ease-in;
+        }
+        
+        /* Utility class for hiding elements with a fade */
+        .hidden {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            position: absolute;
         }
 
-        /* Sidebar styles from your original design */
+        /* Sidebar styles */
         #sidebar {
             width: 250px;
             background-color: #1f2937;
@@ -75,6 +101,7 @@
             display: flex;
             flex-direction: column;
             border-right: 1px solid #374151;
+            flex-shrink: 0;
         }
         #dashboard-title {
             font-size: 1.8rem;
@@ -98,7 +125,7 @@
             transition: background-color 0.2s, color 0.2s;
         }
         #sidebar nav li a:hover, #sidebar nav li a.active {
-            background-color: #374151;
+            background-color: #4f46e5;
             color: #ffffff;
         }
 
@@ -117,6 +144,7 @@
             width: 100%;
             height: 100%;
             border: none;
+            background-color: transparent;
         }
 
         /* Animated NEXID title */
@@ -152,7 +180,7 @@
         
         /* User info and sign-out button */
         #user-info {
-            margin-top: auto; /* Pushes it to the bottom of the sidebar */
+            margin-top: auto;
             padding-top: 1.5rem;
             text-align: center;
             border-top: 1px solid #374151;
@@ -184,37 +212,51 @@
         #sign-out-button:hover {
             background: #8b5cf6;
         }
+
+        /* Loading Spinner */
+        .loader {
+            width: 48px;
+            height: 48px;
+            border: 5px solid #FFF;
+            border-bottom-color: #a78bfa;
+            border-radius: 50%;
+            display: inline-block;
+            box-sizing: border-box;
+            animation: rotation 1s linear infinite;
+        }
+        @keyframes rotation {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
     </style>
 </head>
 <body>
 
-    <!-- Login screen, visible by default -->
     <div id="login-container">
-        <h2>Welcome to NEXID</h2>
-        <p>Your unified multi-platform analysis dashboard. Please sign in with Google to continue.</p>
-        <!-- The Google Sign-In button will be rendered here -->
-        <div id="g_id_onload"
-             data-client_id="1038030558654-6j7ccj0j90ospsrnpus297q7sb021ivn.apps.googleusercontent.com"
-             data-callback="onSignIn"
-             data-auto_select="true">
-        </div>
-        <div class="g_id_signin" 
-             data-type="standard"
-             data-theme="outline"
-             data-size="large"
-             data-text="sign_in_with"
-             data-shape="rectangular"
-             data-logo_alignment="left">
+        <div class="login-box">
+            <h2>Welcome to NEXID</h2>
+            <p>Your unified multi-platform analysis dashboard. Please sign in with Google to continue.</p>
+            <div id="g_id_onload"
+                 data-client_id="1038030558654-6j7ccj0j90ospsrnpus297q7sb021ivn.apps.googleusercontent.com"
+                 data-callback="onSignIn"
+                 data-auto_select="true">
+            </div>
+            <div class="g_id_signin" 
+                 data-type="standard"
+                 data-theme="outline"
+                 data-size="large"
+                 data-text="sign_in_with"
+                 data-shape="rectangular"
+                 data-logo_alignment="left">
+            </div>
         </div>
     </div>
     
-    <!-- Wrapper for your entire dashboard, hidden by default -->
-    <div id="dashboard-wrapper">
+    <div id="dashboard-wrapper" class="hidden">
         <aside id="sidebar">
             <h1 id="dashboard-title">Dashboard</h1>
             <nav>
                 <ul>
-                    <!-- Sidebar links -->
                     <li><a href="sitemap.html" class="tab-link">ARTICLES</a></li>
                     <li><a href="youtube.html" class="tab-link">YOUTUBE</a></li>
                     <li><a href="reddit.html" class="tab-link">REDDIT</a></li>
@@ -226,7 +268,6 @@
                     <li><a href="comscore.html" class="tab-link">COMSCORE</a></li>
                 </ul>
             </nav>
-            <!-- User profile and sign-out button -->
             <div id="user-info">
                 <img id="user-pic" src="" alt="User profile picture">
                 <p id="user-name"></p>
@@ -244,102 +285,82 @@
     </div>
 
     <script>
-        /**
-         * Callback function that handles the response from Google Sign-In.
-         * @param {object} googleUser - The object containing user credential information.
-         */
         function onSignIn(googleUser) {
-            // Decode the JWT token to get user profile information
             const token = googleUser.credential;
             const userProfile = JSON.parse(atob(token.split('.')[1]));
 
-            // Update the UI with user's name and profile picture
             document.getElementById('user-name').innerText = userProfile.name;
             document.getElementById('user-pic').src = userProfile.picture;
 
-            // Hide the login screen and show the main dashboard
-            document.getElementById('login-container').style.display = 'none';
-            document.getElementById('dashboard-wrapper').style.display = 'flex';
+            document.getElementById('login-container').classList.add('hidden');
+            document.getElementById('dashboard-wrapper').classList.remove('hidden');
         }
 
-        /**
-         * Signs the user out, revokes the token, and returns to the login screen.
-         */
         function signOut() {
             google.accounts.id.disableAutoSelect();
             google.accounts.id.revoke(localStorage.getItem('email'), done => {
-                // Clear any stored user info if necessary
                 localStorage.clear();
-                // Hide the dashboard and show the login screen again
-                document.getElementById('login-container').style.display = 'flex';
-                document.getElementById('dashboard-wrapper').style.display = 'none';
+                document.getElementById('dashboard-wrapper').classList.add('hidden');
+                document.getElementById('login-container').classList.remove('hidden');
             });
         }
 
-        // Main script execution after the DOM is fully loaded
         document.addEventListener('DOMContentLoaded', () => {
             const tabLinks = document.querySelectorAll('.tab-link');
             const mainContent = document.getElementById('main-content');
             const dashboardTitle = document.getElementById('dashboard-title');
             const signOutButton = document.getElementById('sign-out-button');
             
-            // Store the initial state of the main content to restore it later
             const initialContent = mainContent.innerHTML;
 
-            // Attach the signOut function to the sign-out button
             signOutButton.addEventListener('click', signOut);
 
-            // Add click event listeners to all sidebar navigation links
             tabLinks.forEach(link => {
                 link.addEventListener('click', (e) => {
-                    e.preventDefault(); // Prevent default link navigation
-                    // Manage active state for sidebar links
+                    e.preventDefault();
                     tabLinks.forEach(l => l.classList.remove('active'));
                     link.classList.add('active');
                     
-                    // Load the content into an iframe
-                    mainContent.style.padding = '0';
-                    mainContent.innerHTML = `<iframe id="content-frame" src="${link.href}"></iframe>`;
+                    // Show loader
+                    mainContent.innerHTML = '<div class="loader"></div>';
+                    mainContent.style.padding = '2rem'; // Restore padding for loader
 
-                    // Send a page_view event to Google Analytics
-                    gtag('event', 'page_view', {
-                        page_path: link.getAttribute('href')
-                    });
+                    // Create iframe and listen for load event
+                    const iframe = document.createElement('iframe');
+                    iframe.id = 'content-frame';
+                    iframe.src = link.href;
+                    iframe.onload = () => {
+                        mainContent.innerHTML = ''; // Clear loader
+                        mainContent.style.padding = '0'; // Remove padding for iframe
+                        mainContent.appendChild(iframe);
+                    };
+                    
+                    gtag('event', 'page_view', { page_path: link.getAttribute('href') });
                 });
             });
 
-            // Make the main dashboard title clickable to return to the home screen
             dashboardTitle.addEventListener('click', () => {
                 mainContent.innerHTML = initialContent;
                 mainContent.style.padding = '2rem';
                 tabLinks.forEach(l => l.classList.remove('active'));
-                initNexidInteraction(); // Re-initialize the mouse-move effect
+                initNexidInteraction();
 
-                // Send a page_view event for returning home
-                gtag('event', 'page_view', {
-                    page_path: '/home'
-                });
+                gtag('event', 'page_view', { page_path: '/home' });
             });
 
-            /**
-             * Initializes the interactive 3D effect on the NEXID title.
-             */
             function initNexidInteraction() {
                 const titleEl = document.querySelector('.nexid-title');
-                if (!titleEl) return; // Exit if the title element isn't on the page
+                if (!titleEl) return;
 
-                // Track mouse movement over the main content area
                 mainContent.addEventListener('mousemove', (e) => {
                     const { clientX, clientY } = e;
                     const { offsetWidth, offsetHeight, offsetLeft, offsetTop } = mainContent;
                     
-                    // Calculate mouse position relative to the center of the main content area
                     const centerX = offsetWidth / 2;
                     const centerY = offsetHeight / 2;
                     const moveX = (clientX - offsetLeft - centerX) / centerX;
                     const moveY = (clientY - offsetTop - centerY) / centerY;
                     
-                    // Define the intensity of the rotation and glow
                     const rotateIntensity = 8;
                     const glowIntensity = 15;
 
@@ -348,14 +369,12 @@
                     const glowX = moveX * glowIntensity;
                     const glowY = moveY * glowIntensity;
 
-                    // Apply the transformations via CSS custom properties
                     titleEl.style.setProperty('--rotate-x', `${rotateX}deg`);
                     titleEl.style.setProperty('--rotate-y', `${rotateY}deg`);
                     titleEl.style.setProperty('--glow-x', `${glowX}px`);
                     titleEl.style.setProperty('--glow-y', `${glowY}px`);
                 });
 
-                // Reset the effect when the mouse leaves the area
                 mainContent.addEventListener('mouseleave', () => {
                     titleEl.style.setProperty('--rotate-x', `0deg`);
                     titleEl.style.setProperty('--rotate-y', `0deg`);
@@ -364,7 +383,6 @@
                 });
             }
             
-            // Initialize the NEXID title interaction on page load
             initNexidInteraction();
         });
     </script>
