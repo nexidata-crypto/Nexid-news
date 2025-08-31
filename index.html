@@ -227,112 +227,13 @@
             100% { transform: rotate(360deg); }
         }
         
-        /* UPDATED: More reliable centering for the Google Sign-In button container */
         .g_id_signin {
             display: flex;
             justify-content: center;
         }
-
-        /* Cyberpunk Update Modal Styles */
-        #update-modal-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(10, 10, 20, 0.8);
-            backdrop-filter: blur(5px);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            opacity: 0;
-            visibility: hidden;
-            transition: opacity 0.3s ease, visibility 0.3s ease;
-        }
-        #update-modal-overlay.visible {
-            opacity: 1;
-            visibility: visible;
-        }
-        .update-dialog {
-            font-family: 'Inter', sans-serif;
-            background: #0a0a14;
-            border: 1px solid #00ffcc;
-            box-shadow: 0 0 15px #00ffcc, 0 0 30px #00ffcc inset;
-            color: #e0e0e0;
-            padding: 2rem;
-            width: 90%;
-            max-width: 500px;
-            position: relative;
-            transform: scale(0.9);
-            transition: transform 0.3s ease;
-        }
-        #update-modal-overlay.visible .update-dialog {
-            transform: scale(1);
-        }
-        .update-dialog-header {
-            text-align: center;
-            margin-bottom: 1.5rem;
-        }
-        .update-dialog-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 2rem;
-            color: #ff00ff;
-            text-shadow: 0 0 5px #ff00ff, 0 0 10px #ff00ff;
-            animation: glitch 1.5s infinite;
-        }
-        @keyframes glitch {
-            2%,64%{ transform: translate(2px,0) skew(0deg); }
-            4%,60%{ transform: translate(-2px,0) skew(0deg); }
-            62%{ transform: translate(0,0) skew(5deg); }
-        }
-        .update-dialog-body {
-            line-height: 1.6;
-            margin-bottom: 2rem;
-        }
-        .update-dialog-body h3 {
-            color: #00ffcc;
-            margin-bottom: 0.5rem;
-        }
-        .update-dialog-body ul {
-            list-style: none;
-            padding-left: 0;
-        }
-        .update-dialog-body li::before {
-            content: '>> ';
-            color: #ff00ff;
-        }
-        .close-modal-btn {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            background: none;
-            border: none;
-            color: #00ffcc;
-            font-size: 2rem;
-            cursor: pointer;
-            text-shadow: 0 0 5px #00ffcc;
-            transition: color 0.2s;
-        }
-        .close-modal-btn:hover {
-            color: #ff00ff;
-        }
     </style>
 </head>
 <body>
-
-    <!-- Update Dialog HTML -->
-    <div id="update-modal-overlay">
-        <div class="update-dialog">
-            <button class="close-modal-btn" id="close-update-modal">&times;</button>
-            <div class="update-dialog-header">
-                <h2 class="update-dialog-title">SYSTEM UPDATE</h2>
-            </div>
-            <div class="update-dialog-body" id="update-notes-content">
-                <!-- Update notes will be injected here by JavaScript -->
-            </div>
-        </div>
-    </div>
 
     <div id="login-container">
         <div class="login-box">
@@ -387,27 +288,28 @@
     </div>
 
     <script>
+        // This function is called by the Google Identity Services library when a user
+        // successfully signs in, either by clicking the button or automatically.
         function onSignIn(googleUser) {
             const token = googleUser.credential;
+            // Decode the JWT token to get user profile information
             const userProfile = JSON.parse(atob(token.split('.')[1]));
 
             document.getElementById('user-name').innerText = userProfile.name;
             document.getElementById('user-pic').src = userProfile.picture;
 
+            // Hide the login screen and show the main dashboard
             document.getElementById('login-container').classList.add('hidden');
             document.getElementById('dashboard-wrapper').classList.remove('hidden');
         }
 
-        /**
-         * UPDATED: Simplified signOut function. 
-         * Removing localStorage.clear() fixes two bugs:
-         * 1. It allows Google's "remember me" feature to work.
-         * 2. It stops the update dialog from reappearing after every sign-out.
-         */
+        // This function signs the user out.
         function signOut() {
+            // This is a critical step: it tells Google not to automatically sign the user
+            // in on the next page load. This ensures the sign-out is persistent.
             google.accounts.id.disableAutoSelect();
-            // NOTE: We do NOT clear localStorage here, as that would forget the user's
-            // "update seen" status and cause the dialog to reappear unnecessarily.
+
+            // Hide the dashboard and show the login screen again
             document.getElementById('dashboard-wrapper').classList.add('hidden');
             document.getElementById('login-container').classList.remove('hidden');
         }
@@ -422,34 +324,7 @@
 
             signOutButton.addEventListener('click', signOut);
 
-            // --- UPDATE DIALOG LOGIC ---
-            const currentUpdateVersion = "1.2.1"; // Change this to show the dialog again
-            const updateNotes = `
-                <h3>System Patches & Fixes</h3>
-                <ul>
-                    <li>Corrected a session error that required re-login on every visit. Your session is now remembered.</li>
-                    <li>Fixed a bug causing the update dialog to appear on every page load.</li>
-                    <li>Resolved an issue where dashboard tabs would get stuck on the loading screen.</li>
-                    <li>Patched a UI glitch causing the Google Sign-In button to be misaligned.</li>
-                </ul>
-            `;
-            const updateModalOverlay = document.getElementById('update-modal-overlay');
-            const closeUpdateModalBtn = document.getElementById('close-update-modal');
-            const updateNotesContent = document.getElementById('update-notes-content');
-            const lastSeenVersion = localStorage.getItem('lastUpdateSeen');
-            if (lastSeenVersion !== currentUpdateVersion) {
-                updateNotesContent.innerHTML = updateNotes;
-                updateModalOverlay.classList.add('visible');
-            }
-            closeUpdateModalBtn.addEventListener('click', () => {
-                updateModalOverlay.classList.remove('visible');
-                localStorage.setItem('lastUpdateSeen', currentUpdateVersion);
-            });
-            // --- END OF UPDATE DIALOG LOGIC ---
-
-            /**
-             * More robust tab loading logic.
-             */
+            // Logic for loading content into the iframe when a tab is clicked
             tabLinks.forEach(link => {
                 link.addEventListener('click', (e) => {
                     e.preventDefault();
@@ -457,7 +332,7 @@
                     link.classList.add('active');
                     
                     mainContent.innerHTML = '';
-                    mainContent.style.padding = '2rem';
+                    mainContent.style.padding = '2rem'; // Add padding for the loader
 
                     const loader = document.createElement('div');
                     loader.className = 'loader';
@@ -465,12 +340,13 @@
 
                     const iframe = document.createElement('iframe');
                     iframe.id = 'content-frame';
-                    iframe.style.display = 'none';
+                    iframe.style.display = 'none'; // Hide iframe until content is loaded
 
+                    // When the iframe content has finished loading, remove the loader
                     iframe.onload = () => {
                         loader.remove(); 
                         iframe.style.display = 'block'; 
-                        mainContent.style.padding = '0'; 
+                        mainContent.style.padding = '0'; // Remove padding for the iframe
                     };
 
                     mainContent.appendChild(iframe);
@@ -480,15 +356,16 @@
                 });
             });
 
+            // Logic to return to the home screen
             dashboardTitle.addEventListener('click', () => {
                 mainContent.innerHTML = initialContent;
                 mainContent.style.padding = '2rem';
                 tabLinks.forEach(l => l.classList.remove('active'));
-                initNexidInteraction();
-
+                initNexidInteraction(); // Re-initialize the mouse-move effect
                 gtag('event', 'page_view', { page_path: '/home' });
             });
 
+            // Function to handle the 3D mouse-move effect on the NEXID title
             function initNexidInteraction() {
                 const titleEl = document.querySelector('.nexid-title');
                 if (!titleEl) return;
