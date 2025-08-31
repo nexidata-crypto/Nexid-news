@@ -22,62 +22,39 @@
       gtag('config', 'G-5XCH2XQTFB'); 
     </script>
 
-    <!-- Google Identity Services Library -->
-    <script src="https://accounts.google.com/gsi/client" async defer></script>
-
     <style>
         /* General body styles */
         body {
             font-family: 'Inter', sans-serif;
             margin: 0;
-            background: linear-gradient(-45deg, #020617, #111827, #0f172a, #1e293b);
-            background-size: 400% 400%;
-            animation: gradientBG 15s ease infinite;
             color: #f9fafb;
             overflow: hidden;
         }
 
-        @keyframes gradientBG {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        /* Login screen styles */
-        #login-container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
-            text-align: center;
-            padding: 2rem;
-            transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+        /* Lofi vibe background */
+        #background-video {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            min-width: 100%;
+            min-height: 100%;
+            width: auto;
+            height: auto;
+            z-index: -2;
+            transform: translateX(-50%) translateY(-50%);
+            background-size: cover;
         }
         
-        .login-box {
-            background: rgba(31, 41, 55, 0.5);
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 3rem;
-            border-radius: 16px;
-            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        #login-container h2 {
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #fff;
-            margin-bottom: 1rem;
-        }
-        #login-container p {
-            color: #d1d5db;
-            margin-bottom: 2.5rem;
-            max-width: 400px;
+        /* UPDATED: Overlay is now darker with 60% opacity (40% transparency for the GIF) */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(17, 24, 39, 0.6); 
+            z-index: -1;
         }
 
         /* Dashboard wrapper */
@@ -85,20 +62,12 @@
             width: 100%;
             height: 100vh;
             display: flex;
-            transition: opacity 0.5s ease-in, visibility 0.5s ease-in;
         }
         
-        .hidden {
-            opacity: 0;
-            visibility: hidden;
-            pointer-events: none;
-            position: absolute;
-        }
-
         /* Sidebar styles */
         #sidebar {
             width: 250px;
-            background-color: #1f2937;
+            background-color: #111827; /* Darker sidebar */
             padding: 1.5rem;
             display: flex;
             flex-direction: column;
@@ -106,11 +75,16 @@
             flex-shrink: 0;
         }
         #dashboard-title {
+            font-family: 'Orbitron', sans-serif;
             font-size: 1.8rem;
             font-weight: 700;
             margin: 0 0 2rem 0;
             color: #a78bfa;
             cursor: pointer;
+            text-shadow: 0 0 5px rgba(167, 139, 250, 0.5);
+        }
+        #sidebar nav {
+            flex-grow: 1;
         }
         #sidebar nav ul {
             list-style: none;
@@ -124,11 +98,16 @@
             padding: 0.75rem 1rem;
             border-radius: 6px;
             margin-bottom: 0.5rem;
-            transition: background-color 0.2s, color 0.2s;
+            transition: background-color 0.2s, color 0.2s, box-shadow 0.2s;
         }
-        #sidebar nav li a:hover, #sidebar nav li a.active {
+        #sidebar nav li a:hover {
+             background-color: #312e81;
+             color: #ffffff;
+        }
+        #sidebar nav li a.active {
             background-color: #4f46e5;
             color: #ffffff;
+            box-shadow: 0 0 15px rgba(79, 70, 229, 0.5);
         }
 
         /* Main content area */
@@ -150,6 +129,7 @@
         }
 
         .nexid-title {
+            font-family: 'Orbitron', sans-serif;
             font-size: 6rem;
             font-weight: 700;
             letter-spacing: 5px;
@@ -178,40 +158,6 @@
             color: #4b5563;
         }
         
-        #user-info {
-            margin-top: auto;
-            padding-top: 1.5rem;
-            text-align: center;
-            border-top: 1px solid #374151;
-        }
-        #user-info img {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            margin-bottom: 0.75rem;
-            border: 2px solid #4f46e5;
-        }
-        #user-info p {
-            color: #e5e7eb;
-            font-size: 0.9rem;
-            font-weight: 500;
-            margin: 0 0 1rem;
-        }
-        #sign-out-button {
-            background: #a78bfa;
-            color: white;
-            border: none;
-            padding: 10px 15px;
-            border-radius: 6px;
-            cursor: pointer;
-            width: 100%;
-            font-weight: 600;
-            transition: background-color 0.2s;
-        }
-        #sign-out-button:hover {
-            background: #8b5cf6;
-        }
-
         .loader {
             width: 48px;
             height: 48px;
@@ -226,36 +172,14 @@
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-        
-        .g_id_signin {
-            display: flex;
-            justify-content: center;
-        }
     </style>
 </head>
 <body>
 
-    <div id="login-container">
-        <div class="login-box">
-            <h2>Welcome to NEXID</h2>
-            <p>Your unified multi-platform analysis dashboard. Please sign in with Google to continue.</p>
-            <div id="g_id_onload"
-                 data-client_id="1038030558654-6j7ccj0j90ospsrnpus297q7sb021ivn.apps.googleusercontent.com"
-                 data-callback="onSignIn"
-                 data-auto_select="true">
-            </div>
-            <div class="g_id_signin" 
-                 data-type="standard"
-                 data-theme="outline"
-                 data-size="large"
-                 data-text="sign_in_with"
-                 data-shape="rectangular"
-                 data-logo_alignment="left">
-            </div>
-        </div>
-    </div>
+    <!-- UPDATED: New GIF link -->
+    <img src="https://giffiles.alphacoders.com/220/220240.gif" id="background-video" alt="Lofi city animation">
     
-    <div id="dashboard-wrapper" class="hidden">
+    <div id="dashboard-wrapper">
         <aside id="sidebar">
             <h1 id="dashboard-title">Dashboard</h1>
             <nav>
@@ -271,11 +195,6 @@
                     <li><a href="comscore.html" class="tab-link">COMSCORE</a></li>
                 </ul>
             </nav>
-            <div id="user-info">
-                <img id="user-pic" src="" alt="User profile picture">
-                <p id="user-name"></p>
-                <button id="sign-out-button">Sign Out</button>
-            </div>
         </aside>
 
         <main id="main-content">
@@ -288,41 +207,12 @@
     </div>
 
     <script>
-        // This function is called by the Google Identity Services library when a user
-        // successfully signs in, either by clicking the button or automatically.
-        function onSignIn(googleUser) {
-            const token = googleUser.credential;
-            // Decode the JWT token to get user profile information
-            const userProfile = JSON.parse(atob(token.split('.')[1]));
-
-            document.getElementById('user-name').innerText = userProfile.name;
-            document.getElementById('user-pic').src = userProfile.picture;
-
-            // Hide the login screen and show the main dashboard
-            document.getElementById('login-container').classList.add('hidden');
-            document.getElementById('dashboard-wrapper').classList.remove('hidden');
-        }
-
-        // This function signs the user out.
-        function signOut() {
-            // This is a critical step: it tells Google not to automatically sign the user
-            // in on the next page load. This ensures the sign-out is persistent.
-            google.accounts.id.disableAutoSelect();
-
-            // Hide the dashboard and show the login screen again
-            document.getElementById('dashboard-wrapper').classList.add('hidden');
-            document.getElementById('login-container').classList.remove('hidden');
-        }
-
         document.addEventListener('DOMContentLoaded', () => {
             const tabLinks = document.querySelectorAll('.tab-link');
             const mainContent = document.getElementById('main-content');
             const dashboardTitle = document.getElementById('dashboard-title');
-            const signOutButton = document.getElementById('sign-out-button');
             
             const initialContent = mainContent.innerHTML;
-
-            signOutButton.addEventListener('click', signOut);
 
             // Logic for loading content into the iframe when a tab is clicked
             tabLinks.forEach(link => {
@@ -406,3 +296,4 @@
     </script>
 </body>
 </html>
+
